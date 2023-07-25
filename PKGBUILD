@@ -95,6 +95,7 @@ _package() {
     'linux-firmware: firmware images needed for some devices'
   )
   provides=(
+    linux
     KSMBD-MODULE
     VIRTUALBOX-GUEST-MODULES
     WIREGUARD-MODULE

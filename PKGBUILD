@@ -70,7 +70,7 @@ prepare() {
   scripts/config \
     -d LTO_NONE \
     -e HAS_LTO_CLANG \
-    -e LTO_CLANG_FULL
+    -e LTO_CLANG_THIN
   _make olddefconfig
   diff -u ../config .config || :
 

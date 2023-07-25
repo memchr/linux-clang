@@ -1,6 +1,6 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgbase=linux
+pkgbase=linux-clang
 pkgver=6.4.6.arch1
 pkgrel=1
 pkgdesc='Linux'
@@ -19,12 +19,8 @@ makedepends=(
   python
   tar
   xz
-
-  # htmldocs
-  graphviz
-  imagemagick
-  python-sphinx
-  texlive-latexextra
+  clang
+  llvm
 )
 options=('!strip')
 _srcname="$_srctag"
@@ -88,7 +84,7 @@ build() {
 }
 
 _package() {
-  pkgdesc="The $pkgdesc kernel and modules"
+  pkgdesc="The $pkgdesc kernel and modules (clang build)"
   depends=(
     coreutils
     initramfs
@@ -128,7 +124,7 @@ _package() {
 }
 
 _package-headers() {
-  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
+  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel (clang build)"
   depends=(pahole)
 
   cd $_srcname

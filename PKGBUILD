@@ -27,9 +27,9 @@ makedepends=(
   texlive-latexextra
 )
 options=('!strip')
-_srcname=archlinux-linux
+_srcname="$_srctag"
 source=(
-  "$_srcname::git+https://github.com/archlinux/linux?signed#tag=$_srctag"
+  "https://github.com/archlinux/linux/archive/refs/tags/${_srcname}.tar.gz"
   config  # the main kernel config file
 )
 validpgpkeys=(
@@ -47,7 +47,7 @@ export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EP
 
 _make() {
   test -s version
-  make KERNELRELEASE="$(<version)" "$@"
+  make -j4 LLVM=1 LLVM_IAS=1 KCFLAGS="-O3 -march=x86-64-v3 -pipe " KERNELRELEASE="$(<version)" "$@"
 }
 
 prepare() {
@@ -71,6 +71,10 @@ prepare() {
 
   echo "Setting config..."
   cp ../config .config
+  scripts/config \
+    -d LTO_NONE \
+    -e HAS_LTO_CLANG \
+    -e LTO_CLANG_FULL
   _make olddefconfig
   diff -u ../config .config || :
 
@@ -80,7 +84,7 @@ prepare() {
 build() {
   cd $_srcname
   _make all
-  _make htmldocs
+  # _make htmldocs
 }
 
 _package() {
@@ -227,7 +231,7 @@ _package-docs() {
 pkgname=(
   "$pkgbase"
   "$pkgbase-headers"
-  "$pkgbase-docs"
+  #"$pkgbase-docs"
 )
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {

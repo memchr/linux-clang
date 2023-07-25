@@ -23,9 +23,9 @@ makedepends=(
   llvm
 )
 options=('!strip')
-_srcname="$_srctag"
+_srcname="linux-${pkgver%.*}-${pkgver##*.}"
 source=(
-  "https://github.com/archlinux/linux/archive/refs/tags/${_srcname}.tar.gz"
+  "https://github.com/archlinux/linux/archive/refs/tags/${_srctag}.tar.gz"
   config  # the main kernel config file
 )
 validpgpkeys=(
@@ -71,7 +71,8 @@ prepare() {
     -d LTO_NONE \
     -e HAS_LTO_CLANG \
     -e LTO_CLANG_FULL
-  _make olddefconfig
+  #_make olddefconfig
+  _make menuconfig
   diff -u ../config .config || :
 
   echo "Prepared $pkgbase version $(<version)"

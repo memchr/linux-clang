@@ -71,8 +71,7 @@ prepare() {
     -d LTO_NONE \
     -e HAS_LTO_CLANG \
     -e LTO_CLANG_FULL
-  #_make olddefconfig
-  _make menuconfig
+  _make olddefconfig
   diff -u ../config .config || :
 
   echo "Prepared $pkgbase version $(<version)"

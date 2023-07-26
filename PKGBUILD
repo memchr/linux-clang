@@ -8,8 +8,7 @@ source default.conf || { echo "needs default.conf"; exit 1; }
 echo -e "\
 :: The build and source options can be configurated with 
    options.conf, see default.conf for the available options
-   and their defaults
-"
+   and their defaults"
 #######
 
 pkgbase="${_kernel_name}"
@@ -73,7 +72,7 @@ export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EP
 
 _make() {
   test -s version
-  make -j4 LLVM="$_use_clang" LLVM_IAS="$_use_clang" KCFLAGS="$_optimization -march=$_march -pipe" KERNELRELEASE="$(<version)" "$@"
+  make -j "$_make_jobs" LLVM="$_use_clang" LLVM_IAS="$_use_clang" KCFLAGS="$_optimization -march=$_march -pipe" KERNELRELEASE="$(<version)" "$@"
 }
 
 prepare() {

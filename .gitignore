@@ -2,4 +2,4 @@ src
 *.tar.gz
 pkg
 *.pkg.tar.*
-build.conf
+options.conf

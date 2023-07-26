@@ -11,7 +11,7 @@ on:
         required: false
         default: false
 jobs:
-  ci_experiments:
+  build_and_release:
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel 
@@ -19,23 +19,32 @@ jobs:
       volumes:
         - /:/host
     steps:
-      - name: prepare packages
+      - name: Prepare packages
         run: |
           pacman -Syu --noconfirm --needed ccache git rsync
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
           
       - name: ssh debug
         uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      - name: prepare runner user
+      - name: Prepare runner user
         run: |
           useradd -m runner
           echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
       - uses: actions/checkout@v3
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: 'default.conf'
+
+      - name: Fail
+        run: exit 1
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -59,12 +68,17 @@ jobs:
             rsync -r --delete /empty/ "/host/$f"
           done
 
-      - name: prepare source
+      - name: Prepare source
         run: |
           chown -R runner:runner .
           sudo -u runner cp dist/options-znver2.conf options.conf
-          sudo -u runner makepkg --nobuild --noextract -s
+          sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
         
-      # - name: build kernel
-      #   run: |
-      #     sudo -u runner makepkg
+      - name: Build kernel
+        run: |
+          sudo -u runner makepkg
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: '*.pkg.tar.zst'

@@ -4,7 +4,12 @@
 # shellcheck disable=SC2034,SC1091,SC2148,SC2155,SC2154
 # Use build.conf to override default build options
 source default.conf || { echo "needs default.conf"; exit 1; }
-[[ -e build.conf ]] && source build.conf
+[[ -e options.conf ]] && source options.conf
+echo -e "\
+:: The build and source options can be configurated with 
+   options.conf, see default.conf for the available options
+   and their defaults
+"
 #######
 
 pkgbase="${_kernel_name}"
@@ -41,11 +46,18 @@ makedepends+=(
   texlive-latexextra
 )
 options=('!strip')
-_srcname="linux-${pkgver%.*}-${pkgver##*.}"
-source=(
-  "https://github.com/archlinux/linux/archive/refs/tags/${_srctag}.tar.gz"
-  config  # the main kernel config file
-)
+if (( _use_tarball)); then
+  _srcname="linux-${pkgver%.*}-${pkgver##*.}"
+  source=(
+    "https://github.com/archlinux/linux/archive/refs/tags/${_srctag}.tar.gz"
+  )
+else
+  _srcname="archlinux-linux"
+  source=(
+    "$_srcname::git+https://github.com/archlinux/linux?signed#tag=$_srctag"
+  )
+fi
+source+=(config) # the main kernel config file
 validpgpkeys=(
   ABAF11C65A2970B130ABE3C479BE3E4300411886  # Linus Torvalds
   647F28654894E3BD457199BE38DBBDC86092693E  # Greg Kroah-Hartman

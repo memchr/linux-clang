@@ -43,7 +43,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with: 
-          key: ${{ github.run_id }}-exp1
+          key: ${{ github.run_id }}
     
       - name: Freeup space
         run: |

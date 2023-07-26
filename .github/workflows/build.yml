@@ -1,0 +1,59 @@
+name: build kernel
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch: 
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+jobs:
+  ci_experiments:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel 
+      options: --privileged
+      volumes:
+        - /:/host
+    steps:
+      - name: prepare packages
+        run: |
+          pacman -Syu --noconfirm --needed ccache git rsync
+          
+      - name: ssh debug
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: prepare runner user
+        run: |
+          useradd -m runner
+          echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' | tee /etc/sudoers
+
+      - uses: actions/checkout@v3
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with: 
+          key: ${{ github.run_id }}-exp1
+    
+      - name: Freeup space
+        run: |
+          mkdir /empty -p
+          _files=(
+            /usr/local/lib/android
+            /usr/local/.ghcup
+            /usr/local/share/powershell
+            /usr/local/share/chromium
+            /usr/local/share/vcpkg
+            /usr/share/dotnet
+            /usr/share/swift
+            /opt/hostedtoolcache/CodeQL
+          )
+          for f in ${_files[@]}; do 
+            rsync -r --delete /empty/ "/host/$f"
+          done

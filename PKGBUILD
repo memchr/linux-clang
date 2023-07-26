@@ -2,28 +2,8 @@
 # Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 # shellcheck disable=SC2034,SC1091,SC2148,SC2155,SC2154
-####### 
-## Build Options
-
-# Kernel name
-_kernel_name=linux-clang
-
-# Build use clang
-_use_clang=1
-
-# Use menuconfig to customize kernel config
-_use_menuconfig=0
-
-# Build documentations
-_build_docs=1
-
-# C compiler -march flag
-_march=x86-64-v3
-
-# C Complier Optimization
-_optimization="-O3"
-
 # Use build.conf to override default build options
+source default.conf || { echo "needs default.conf"; exit 1; }
 [[ -e build.conf ]] && source build.conf
 #######
 
@@ -81,7 +61,7 @@ export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EP
 
 _make() {
   test -s version
-  make -j4 LLVM=$_use_clang LLVM_IAS=$_use_clang KCFLAGS="$_optimization -march=$_march -pipe " KERNELRELEASE="$(<version)" "$@"
+  make -j4 LLVM="$_use_clang" LLVM_IAS="$_use_clang" KCFLAGS="$_optimization -march=$_march -pipe" KERNELRELEASE="$(<version)" "$@"
 }
 
 prepare() {

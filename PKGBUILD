@@ -98,7 +98,7 @@ prepare() {
   cp ../config .config
 
   # Enable LTO for clang build
-  if [[ -n "$_user_clang" ]]; then
+  if (( _use_clang )); then
     scripts/config \
       -d LTO_NONE \
       -e HAS_LTO_CLANG \

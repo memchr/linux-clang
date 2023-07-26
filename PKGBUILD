@@ -118,7 +118,9 @@ prepare() {
 build() {
   cd "$_srcname" || { echo "source not found"; exit 1; }
   _make all
-  (( _build_docs )) && _make htmldocs
+  if (( _build_docs )); then
+    _make htmldocs
+  fi
 }
 
 _package() {

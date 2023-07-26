@@ -22,6 +22,7 @@ jobs:
       - name: prepare packages
         run: |
           pacman -Syu --noconfirm --needed ccache git rsync
+          echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
           
       - name: ssh debug
         uses: mxschmitt/action-tmate@v3
@@ -32,7 +33,7 @@ jobs:
       - name: prepare runner user
         run: |
           useradd -m runner
-          echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' | tee /etc/sudoers
+          echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
       - uses: actions/checkout@v3
 
@@ -57,3 +58,13 @@ jobs:
           for f in ${_files[@]}; do 
             rsync -r --delete /empty/ "/host/$f"
           done
+
+      - name: prepare source
+        run: |
+          chown -R runner:runner .
+          sudo -u runner cp dist/options-znver2.conf options.conf
+          sudo -u runner makepkg --nobuild --noextract -s
+        
+      # - name: build kernel
+      #   run: |
+      #     sudo -u runner makepkg

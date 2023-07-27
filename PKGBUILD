@@ -74,9 +74,11 @@ if [[ -n "$_march" ]]; then
   _kcflags+=(-march="$_march")
 fi
 
-export KBUILD_BUILD_HOST=archlinux
-export KBUILD_BUILD_USER=$pkgbase
-export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+if command -v ccache > /dev/null; then
+  export CCACHE_NOHASHDIR=1
+  export CCACHE_BASEDIR="$PWD/src/$_srcname"
+  _kcflags+=(-fdebug-prefix-map=$PWD/src/$_srcname=.)
+fi
 
 echo -n "\
 :: Source Options
@@ -89,6 +91,10 @@ echo -n "\
     Build docs  = $( (( _build_docs )) && echo yes || echo no )
     Make jobs   = $_make_jobs
 "
+
+export KBUILD_BUILD_HOST=archlinux
+export KBUILD_BUILD_USER=$pkgbase
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
 
 _make() {
   test -s version

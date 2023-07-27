@@ -115,14 +115,7 @@ jobs:
 
       - name: Build kernel
         run: |
-          cat > build.sh << EOF 
-          export CCACHE_NOHASHDIR=1
-          export CCACHE_BASEDIR="$PWD/src/$_srcname"
-          export PATH="/usr/lib/ccache/bin:$PATH"
-          makepkg
-          EOF
-          chmod 755 build.sh
-          sudo -u runner bash build.sh
+          sudo -u runner makepkg
       
       - name: Upload packages
         uses: actions/upload-artifact@v3

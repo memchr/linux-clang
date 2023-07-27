@@ -66,6 +66,8 @@ jobs:
         run: |
           useradd -m runner
           echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+          mkdir -p ~runner/.config
+          chown runner:runner ~runner/.config
           cp -r ~/.config/ccache ~runner/.config/ccache
 
       # A full kernel build requires at least 28GB of free space.

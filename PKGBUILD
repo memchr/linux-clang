@@ -75,15 +75,8 @@ if [[ -n "$_march" ]]; then
   _kcflags+=(-march="$_march")
 fi
 
-## ccache
 if command -v ccache > /dev/null; then
-  export CCACHE_NOHASHDIR=1
-  export CCACHE_BASEDIR="$PWD/src/$_srcname"
   _kcflags+=(-fdebug-prefix-map=$PWD/src/$_srcname=.)
-fi
-
-if (( _use_ccache )) && [[ -d /usr/lib/ccache ]]; then
-  export PATH="/usr/lib/ccache/bin:$PATH"
 fi
 
 ## build information
@@ -97,7 +90,6 @@ echo -n "\
     KCFLAGS     = \"${_kcflags[@]}\"
     Build docs  = $( (( _build_docs )) && echo yes || echo no )
     Make jobs   = $_make_jobs
-    ccache      = $( (( _use_ccache )) && echo yes || echo no )
 "
 _buildinfo="$_optimization target:$([[ -n $_march ]] && echo $_march || echo generic) compiler:$( ((_use_clang)) && echo clang )"
 

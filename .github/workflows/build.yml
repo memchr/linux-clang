@@ -114,7 +114,6 @@ jobs:
 
       - name: Build kernel
         run: |
-          echo 'export PATH=/usr/lib/ccache:$PATH' | tee -a options.conf
           sudo -u runner makepkg
       
       - name: Upload

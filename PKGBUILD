@@ -80,6 +80,10 @@ if command -v ccache > /dev/null; then
   _kcflags+=(-fdebug-prefix-map=$PWD/src/$_srcname=.)
 fi
 
+if (( _use_ccache )) && [[ -d /usr/lib/ccache ]]; then
+  export PATH="/usr/lib/ccache/bin:$PATH"
+fi
+
 echo -n "\
 :: Source Options
     Source Type = $( ((_use_tarball)) && echo tarball || echo git)
@@ -90,6 +94,7 @@ echo -n "\
     KCFLAGS     = \"${_kcflags[@]}\"
     Build docs  = $( (( _build_docs )) && echo yes || echo no )
     Make jobs   = $_make_jobs
+    ccache      = $( (( _use_clang )) && echo yes || echo no )
 "
 
 export KBUILD_BUILD_HOST=archlinux

@@ -120,14 +120,9 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v3
         with:
+          retention-days: 7
           name: kernel
           path: '*.pkg.tar.zst'
-
-      - name: Release packages
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: '*.pkg.tar.zst'
   
   extra_modules_nvidia:
     needs: kernel
@@ -142,12 +137,14 @@ jobs:
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
           useradd -m runner
           echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
-      
+     
+      - uses: actions/checkout@v3
+          
       - uses: actions/download-artifact@v3
         with:
           name: kernel
           path: kernel
-
+      
       - name: Install kernel
         run: |
           pacman -U --noconfirm kernel/*
@@ -156,6 +153,38 @@ jobs:
         run: |
           pacman -S --noconfirm nvidia-dksm
       
-      # - name: Build package
-      #   run: |
-          
+      - name: Build package
+        run: |
+          cd extra/nvidia
+          sudo -u runner makepkg -s --noconfirm
+      
+      - name: Upload package
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 7
+          name: extramodule_nvidia
+          path: '*.pkg.tar.zst'
+
+  release:
+    needs:
+      - kernel
+      - extra_modules_nvidia
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch kernel packages
+        uses: actions/download-artifact@v3
+        with:
+          name: kernel
+          path: kernel
+      - name: Fetch extra packages (nvidia)
+        uses: actions/download-artifact@v3
+        with:
+          name: extramodule_nvidia
+          path: extra
+      - name: Release packages
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            'kernel/*.pkg.tar.zst'
+            'extra/*.pkg.tar.zst'

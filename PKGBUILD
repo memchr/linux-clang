@@ -113,6 +113,10 @@ _make() {
 
 
 prepare() {
+  if (( _use_ci && ( _ci_stage == 1 ) )); then
+    return 0
+  fi
+
   cd "$_srcname" || { echo "source not found"; exit 1; }
 
   echo "Setting version..."
@@ -159,6 +163,36 @@ build() {
     _make htmldocs
   fi
 }
+
+if (( _use_ci )); then
+  build() {
+  cd "$_srcname" || { echo "source not found"; exit 1; }
+  case $_ci_stage in
+  0)
+    echo "==> stage $_ci_stage: building vmlinux"
+    _make vmlinux
+    _make bzImage
+
+    echo "==> stage $_ci_stage: generating tarball"
+    cd "$startdir" || { echo "cannot cd to $startdir"; exit 1; }
+    tar --zstd -cvf src.tar.zst src
+
+    echo _ci_stage=1 >> $startdir/options.conf
+    exit 0
+    ;;
+  1)
+    echo "==> stage $_ci_stage: decompressing stage 0 tarball"
+    pushd "$startdir" || { echo "cannot cd to $startdir"; exit 1; }
+    tar -xvf src.tar.zst
+    popd
+
+    echo "==> stage $_ci_stage: building modules"
+    _make all
+    ;;
+  esac
+  }
+fi
+
 
 _package() {
   pkgdesc="The $pkgdesc kernel and modules ($_buildinfo)"

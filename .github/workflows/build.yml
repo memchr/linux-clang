@@ -60,7 +60,7 @@ jobs:
         if: inputs.march != ''
         run: |
           if [[ "${{inputs.march}}" == "0" ]]; then
-            echo "_march= | tee -a options.conf
+            echo "_march=" | tee -a options.conf
           else
             echo "_march=${{inputs.march}}" | tee -a options.conf
           fi

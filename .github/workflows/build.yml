@@ -11,6 +11,16 @@ on:
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
+      march:
+        type: string
+        description: 'Override targe architecture'
+        required: false
+        default: ""
+      opt:
+        type: string
+        description: 'Override optimization level'
+        required: false
+        default: ""
 permissions:
   contents: write
 jobs:
@@ -69,7 +79,17 @@ jobs:
           chown -R runner:runner .
           sudo -u runner cp dist/options-znver2.conf options.conf
           sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
-        
+
+      - name: Apply ovrrides (-march)
+        if: ${{inputs.march}}
+        run: |
+          echo "_march=${{inputs.march}}" | tee -a options.conf
+
+      - name: Apply ovrrides (-O)
+        if: ${{inputs.march}}
+        run: |
+          echo "_optimization=${{inputs.opt}}" | tee -a options.conf
+
       - name: Build kernel
         run: |
           sudo -u runner makepkg

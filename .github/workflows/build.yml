@@ -31,7 +31,11 @@ permissions:
   contents: write
 jobs:
   build_and_release:
+    timeout-minutes: 360
     runs-on: ubuntu-latest
+    strategy:
+      # Disable fail-fast, as the ssh debugging step may fail during the build process.
+      fail-fast: false
     container:
       image: archlinux:base-devel 
       options: --privileged
@@ -61,7 +65,8 @@ jobs:
         with: 
           key: ${{ github.run_id }}
           max-size: 1024M
-    
+
+      # A full kernel build requires at least 28GB of free space.
       - name: Freeup space
         run: |
           mkdir /empty -p

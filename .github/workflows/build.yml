@@ -18,9 +18,14 @@ on:
         default: ""
       opt:
         type: string
-        description: 'Override optimization level'
+        description: 'Override optimization flag'
         required: false
         default: ""
+      build_docs:
+        type: boolean
+        description: 'Build Documentation'
+        required: false
+        default: true
 permissions:
   contents: write
 jobs:
@@ -50,12 +55,29 @@ jobs:
 
       - uses: actions/checkout@v3
 
+      - name: Apply ovrrides (-march)
+        if: inputs.march != ''
+        run: |
+          echo "_march=${{inputs.march}}" | tee -a options.conf
+
+      - name: Apply ovrrides (-O)
+        if: inputs.opt != ''
+        run: |
+          echo "_optimization=${{inputs.opt}}" | tee -a options.conf
+        
+      - name: Apply overrides (build_docs)
+        run: |
+          if [[ "${{inputs.build_docs}}" == "true" ]]; then
+            echo "_build_docs=1" | tee -a options.conf
+          else
+            echo "_build_docs=0" | tee -a options.conf
+          fi
+
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with: 
           key: ${{ github.run_id }}
           max-size: 1024M
-
     
       - name: Freeup space
         run: |
@@ -80,16 +102,7 @@ jobs:
           sudo -u runner cp dist/options-znver2.conf options.conf
           sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
 
-      - name: Apply ovrrides (-march)
-        if: ${{inputs.march}}
-        run: |
-          echo "_march=${{inputs.march}}" | tee -a options.conf
-
-      - name: Apply ovrrides (-O)
-        if: ${{inputs.march}}
-        run: |
-          echo "_optimization=${{inputs.opt}}" | tee -a options.conf
-
+          
       - name: Build kernel
         run: |
           sudo -u runner makepkg

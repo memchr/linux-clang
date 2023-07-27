@@ -13,7 +13,8 @@ on:
         default: false
       march:
         type: string
-        description: 'Override targe architecture'
+        description: |
+          Override target architecture, Use special value "0" to clear the default
         required: false
         default: ""
       opt:
@@ -58,8 +59,11 @@ jobs:
       - name: Apply ovrrides (-march)
         if: inputs.march != ''
         run: |
-          echo "_march=${{inputs.march}}" | tee -a options.conf
-
+          if [[ "${{inputs.march}}" == "0" ]]; then
+            echo "_march= | tee -a options.conf
+          else
+            echo "_march=${{inputs.march}}" | tee -a options.conf
+          fi
       - name: Apply ovrrides (-O)
         if: inputs.opt != ''
         run: |

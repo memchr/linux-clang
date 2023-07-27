@@ -97,7 +97,7 @@ echo -n "\
     KCFLAGS     = \"${_kcflags[@]}\"
     Build docs  = $( (( _build_docs )) && echo yes || echo no )
     Make jobs   = $_make_jobs
-    ccache      = $( (( _use_clang )) && echo yes || echo no )
+    ccache      = $( (( _use_ccache )) && echo yes || echo no )
 "
 _buildinfo="$_optimization target:$([[ -n $_march ]] && echo $_march || echo generic) compiler:$( ((_use_clang)) && echo clang )"
 

@@ -66,6 +66,7 @@ validpgpkeys=(
 b2sums=('SKIP'
         'a73a9eaa59dd45ccdd564b762c3816342873e9002c54b742f481ccd79c34549131ab3b0188445139b9e5fab696b60270f8148337387619456b4674d6ff28ccb7')
 
+## Kernel optitmization
 _kcflags=(
   "$_optimization"
   "-pipe"
@@ -74,6 +75,7 @@ if [[ -n "$_march" ]]; then
   _kcflags+=(-march="$_march")
 fi
 
+## ccache
 if command -v ccache > /dev/null; then
   export CCACHE_NOHASHDIR=1
   export CCACHE_BASEDIR="$PWD/src/$_srcname"
@@ -84,6 +86,7 @@ if (( _use_ccache )) && [[ -d /usr/lib/ccache ]]; then
   export PATH="/usr/lib/ccache/bin:$PATH"
 fi
 
+## build information
 echo -n "\
 :: Source Options
     Source Type = $( ((_use_tarball)) && echo tarball || echo git)
@@ -96,7 +99,9 @@ echo -n "\
     Make jobs   = $_make_jobs
     ccache      = $( (( _use_clang )) && echo yes || echo no )
 "
+_buildinfo="$_optimization target:$([[ -n $_march ]] && echo $_march || echo generic) compiler:$( ((_use_clang)) && echo clang )"
 
+## 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
@@ -156,7 +161,7 @@ build() {
 }
 
 _package() {
-  pkgdesc="The $pkgdesc kernel and modules"
+  pkgdesc="The $pkgdesc kernel and modules ($_buildinfo)"
   depends=(
     coreutils
     initramfs
@@ -196,7 +201,7 @@ _package() {
 }
 
 _package-headers() {
-  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
+  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel ($_buildinfo)"
   depends=(pahole)
 
   cd "$_srcname" || { echo "source not found"; exit 1; }

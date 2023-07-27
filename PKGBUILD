@@ -13,7 +13,7 @@ echo -e "\
 
 pkgbase="${_kernel_name}"
 pkgver=6.4.6.arch1
-pkgrel=5
+pkgrel=6
 pkgdesc='Linux'
 _srctag=v${pkgver%.*}-${pkgver##*.}
 url="https://github.com/archlinux/linux/commits/$_srctag"

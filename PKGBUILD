@@ -66,14 +66,35 @@ validpgpkeys=(
 b2sums=('SKIP'
         'a73a9eaa59dd45ccdd564b762c3816342873e9002c54b742f481ccd79c34549131ab3b0188445139b9e5fab696b60270f8148337387619456b4674d6ff28ccb7')
 
+_kcflags=(
+  "$_optimization"
+  "-pipe"
+)
+if [[ -n "$_march" ]]; then
+  _kcflags+=(-march="$_march")
+fi
+
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
 
+echo -n "\
+:: Source Options
+    Source Type = $( ((_use_tarball)) && echo tarball || echo git)
+:: Build Options
+    Kernel Name = $_kernel_name
+    Compiler    = $( ((_use_clang)) && echo clang || echo gcc )
+    LTO         = $( ((_use_clang)) && echo thin || echo none )
+    KCFLAGS     = \"${_kcflags[@]}\"
+    Build docs  = $( (( _build_docs )) && echo yes || echo no )
+    Make jobs   = $_make_jobs
+"
+
 _make() {
   test -s version
-  make -j "$_make_jobs" LLVM="$_use_clang" LLVM_IAS="$_use_clang" KCFLAGS="$_optimization -march=$_march -pipe" KERNELRELEASE="$(<version)" "$@"
+  make -j "$_make_jobs" LLVM="$_use_clang" LLVM_IAS="$_use_clang" KCFLAGS="${_kcflags[*]}" KERNELRELEASE="$(<version)" "$@"
 }
+
 
 prepare() {
   cd "$_srcname" || { echo "source not found"; exit 1; }

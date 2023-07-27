@@ -29,9 +29,9 @@ on:
         default: false
 permissions:
   contents: write
+
 jobs:
-  build_and_release:
-    timeout-minutes: 360
+  kernel:
     runs-on: ubuntu-latest
     strategy:
       # Disable fail-fast, as the ssh debugging step may fail during the build process.
@@ -41,6 +41,7 @@ jobs:
       options: --privileged
       volumes:
         - /:/host
+    timeout-minutes: 360
     steps:
       - name: Prepare packages
         run: |
@@ -67,7 +68,7 @@ jobs:
           max-size: 1024M
 
       # A full kernel build requires at least 28GB of free space.
-      - name: Freeup space
+      - name: Free up space for building kernel
         run: |
           mkdir /empty -p
           _files=(
@@ -84,7 +85,7 @@ jobs:
             rsync -r --delete /empty/ "/host/$f"
           done
 
-      - name: Prepare source
+      - name: Prepare source and install build dependencies
         run: |
           chown -R runner:runner .
           sudo -u runner cp dist/options-znver2.conf options.conf
@@ -116,13 +117,45 @@ jobs:
         run: |
           sudo -u runner makepkg
       
-      - name: Upload
+      - name: Upload packages
         uses: actions/upload-artifact@v3
         with:
+          name: kernel
           path: '*.pkg.tar.zst'
-        
-      - name: Release
+
+      - name: Release packages
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: '*.pkg.tar.zst'
+  
+  extra_modules_nvidia:
+    needs: kernel
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    timeout-minutes: 360
+    steps:
+      - name: Prepare
+        run: |
+          pacman -Syu --noconfirm --needed git rsync
+          echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+          useradd -m runner
+          echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: kernel
+          path: kernel
+
+      - name: Install kernel
+        run: |
+          pacman -U --noconfirm kernel/*
+      
+      - name: Install nvidia kernel module
+        run: |
+          pacman -S --noconfirm nvidia-dksm
+      
+      # - name: Build package
+      #   run: |
+          

@@ -1,0 +1,53 @@
+# Maintainer: memchr <memchr@proton.me>
+# Contributor: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Eric Bélanger <eric@archlinux.org>
+IFS="-" read -ra _tmp <<< $(pacman -Q nvidia-dkms | cut -d' ' -f2)
+pkgver="${_tmp[0]}"
+pkgrel="${_tmp[1]}"
+pkgname=nvidia-clang
+_kernbase=linux-clang
+pkgdesc="NVIDIA drivers for $_kernbase"
+arch=('x86_64')
+url="https://www.nvidia.com/"
+makedepends=(
+    "${_kernbase}-headers"
+    "nvidia-dkms"
+    "clang"
+    "llvm"
+    "lld"
+)
+provides=('NVIDIA-MODULE')
+license=('custom')
+options=('!strip')
+
+
+build() {
+    _kernver=$(</usr/src/$_kernbase/version)
+
+    # thinlto cache permission denined workaround
+    _thinlto_cache="/usr/src/$_kernbase/.thinlto-cache"
+    [[ -d "$_thinlto_cache" ]] && sudo rm -rf "$_thinlto_cache"
+    sudo mkdir "$_thinlto_cache"
+    sudo chown 1000:1000 "$_thinlto_cache"
+
+    # ssl key work around
+    sudo chmod 755 /var/lib/dkms/mok.key
+
+    fakeroot dkms build --dkmstree "${srcdir}" -m nvidia/${pkgver} -k ${_kernver}
+
+    sudo chmod 700 /var/lib/dkms/mok.key
+}
+
+package() {
+    depends=("$_kernbase" "nvidia-utils=${pkgver}" 'libglvnd')
+
+    _kernver="$(</usr/src/$_kernbase/version)"
+
+    install -Dt "${pkgdir}/usr/lib/modules/${_kernver}/extramodules" -m644 nvidia/${pkgver}/${_kernver}/${CARCH}/module/*
+
+    # compress each module individually
+    find "$pkgdir" -name '*.ko' -exec xz -T1 {} +
+
+    install -Dm644 /usr/share/licenses/nvidia-dkms/LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+# vim:set ts=4 sts=4 sw=4 et:

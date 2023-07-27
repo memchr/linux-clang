@@ -31,13 +31,16 @@ permissions:
   contents: write
 
 jobs:
-  kernel_stage_0:
+  kernel:
     runs-on: ubuntu-latest
     strategy:
       # Disable fail-fast, as the ssh debugging step may fail during the build process.
       fail-fast: false
     container:
       image: archlinux:base-devel 
+      options: --privileged
+      volumes:
+        - /:/host
     timeout-minutes: 360
     steps:
       - name: Prepare packages
@@ -63,6 +66,24 @@ jobs:
         with: 
           key: ${{ github.run_id }}
           max-size: 1024M
+
+      # A full kernel build requires at least 28GB of free space.
+      - name: Free up space for building kernel
+        run: |
+          mkdir /empty -p
+          _files=(
+            /usr/local/lib/android
+            /usr/local/.ghcup
+            /usr/local/share/powershell
+            /usr/local/share/chromium
+            /usr/local/share/vcpkg
+            /usr/share/dotnet
+            /usr/share/swift
+            /opt/hostedtoolcache/CodeQL
+          )
+          for f in ${_files[@]}; do 
+            rsync -r --delete /empty/ "/host/$f"
+          done
 
       - name: Prepare source and install build dependencies
         run: |
@@ -94,94 +115,17 @@ jobs:
 
       - name: Build kernel
         run: |
-          echo "_use_ci=1" >> options.conf
           sudo -u runner makepkg
-      
-      - name: Upload stage files
-        uses: actions/upload-artifact@v3
-        with:
-          retention-days: 1
-          name: kernel_stage_0
-          path: |
-            src.tar.zst
-            options.conf
-
-  kernel_stage_1:
-    needs: kernel_stage_0
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    container:
-      image: archlinux:base-devel 
-      options: --privileged
-      volumes:
-        - /:/host
-    timeout-minutes: 360
-    steps:
-      - name: Prepare packages
-        run: |
-          pacman -Syu --noconfirm --needed ccache git rsync
-          echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
-          
-      - name: ssh debug
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        with:
-          detached: true
-
-      # A full kernel build requires at least 28GB of free space.
-      - name: Free up space for building kernel
-        run: |
-          mkdir /empty -p
-          _files=(
-            /usr/local/lib/android
-            /usr/local/.ghcup
-            /usr/local/share/powershell
-            /usr/local/share/chromium
-            /usr/local/share/vcpkg
-            /usr/share/dotnet
-            /usr/share/swift
-            /opt/hostedtoolcache/CodeQL
-          )
-          for f in ${_files[@]}; do 
-            rsync -r --delete /empty/ "/host/$f"
-          done
-
-      - name: Prepare runner user
-        run: |
-          useradd -m runner
-          echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
-
-      - uses: actions/checkout@v3
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with: 
-          key: ${{ github.run_id }}
-          max-size: 1024M
-      
-      - name: Prepare source and install build dependencies
-        run: |
-          chown -R runner:runner .
-          sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
-
-      - name: Restore stage 0 artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: kernel_stage_0
-      
-      - name: Build Kernel
-        run: | 
-          sudo -u runner makepkg --noextract
       
       - name: Upload packages
         uses: actions/upload-artifact@v3
         with:
+          retention-days: 7
           name: kernel
           path: '*.pkg.tar.zst'
-          
+  
   extra_modules_nvidia:
-    needs: kernel_stage_1
+    needs: kernel
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel
@@ -223,7 +167,7 @@ jobs:
 
   release:
     needs:
-      - kernel_stage_1
+      - kernel
       - extra_modules_nvidia
     runs-on: ubuntu-latest
     steps:
@@ -244,5 +188,3 @@ jobs:
           files: |
             'kernel/*.pkg.tar.zst'
             'extra/*.pkg.tar.zst'
-
-

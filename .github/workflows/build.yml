@@ -92,7 +92,7 @@ jobs:
           sudo -u runner cp dist/options-znver2.conf options.conf
           sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
           source PKGBUILD > /dev/null
-          echo "tarball=${_srcname}.tar.gz" >> ${GITHUB_OUTPUT}
+          echo "tarball=${_srctag}.tar.gz" >> ${GITHUB_OUTPUT}
 
       - name: Restore source tarball cache
         uses: actions/cache/restore@v3

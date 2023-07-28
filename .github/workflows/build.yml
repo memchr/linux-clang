@@ -59,7 +59,7 @@ jobs:
       - name: Install additional packages
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         run: |
-          pacman -Syu --noconfirm --needed neovim htop dust
+          pacman -Syu --noconfirm --needed neovim htop dust bash-completion 
           ln -sf /usr/bin/nvim /bin/vi
 
       ## prepare
@@ -162,7 +162,7 @@ jobs:
       - name: Install additional packages
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         run: |
-          pacman -Syu --noconfirm --needed neovim htop dust
+          pacman -Syu --noconfirm --needed neovim htop dust bash-completion 
           ln -sf /usr/bin/nvim /bin/vi
 
       ## prepare

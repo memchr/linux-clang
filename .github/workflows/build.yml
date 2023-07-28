@@ -231,7 +231,7 @@ jobs:
       
       - name: Install nvidia kernel module
         run: |
-          pacman -S --noconfirm nvidia-dksm
+          pacman -S --noconfirm nvidia-dkms
       
       - name: Build package
         run: |

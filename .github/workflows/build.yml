@@ -47,28 +47,46 @@ jobs:
         run: |
           pacman -Syu --noconfirm --needed ccache git rsync
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+          cd /bin
+          ln -sf nvim vi
           
+      ## debugging
       - name: ssh debug
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
+      - name: Install additional packages
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        run: |
+          pacman -Syu --noconfirm --needed neovim htop dust
+          ln -sf /usr/bin/nvim /bin/vi
 
+      ## prepare
       - uses: actions/checkout@v3
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with: 
-          key: ${{ github.run_id }}
-          max-size: 1024M
+          append-timestamp: false
+          key: kernel_build
+          max-size: 4096M
 
       - name: Prepare runner user
         run: |
+          # add user
           useradd -m runner
           echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+          # ccache
           mkdir -p ~runner/.config
           chown runner:runner ~runner/.config
           cp -r ~/.config/ccache ~runner/.config/ccache
+
+      - name: Prepare source and install build dependencies
+        run: |
+          chown -R runner:runner .
+          sudo -u runner cp dist/options-znver2.conf options.conf
+          sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
 
       # A full kernel build requires at least 28GB of free space.
       - name: Free up space for building kernel
@@ -88,12 +106,7 @@ jobs:
             rsync -r --delete /empty/ "/host/$f"
           done
 
-      - name: Prepare source and install build dependencies
-        run: |
-          chown -R runner:runner .
-          sudo -u runner cp dist/options-znver2.conf options.conf
-          sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
-
+      ## overrides
       - name: Apply ovrrides (-march)
         if: inputs.march != ''
         run: |
@@ -102,12 +115,10 @@ jobs:
           else
             echo "_march=${{inputs.march}}" | tee -a options.conf
           fi
-
       - name: Apply ovrrides (-O)
         if: inputs.opt != ''
         run: |
           echo "_optimization=${{inputs.opt}}" | tee -a options.conf
-        
       - name: Apply overrides (build_docs)
         run: |
           if [[ "${{inputs.build_docs}}" == "true" ]]; then
@@ -116,11 +127,12 @@ jobs:
             echo "_build_docs=0" | tee -a options.conf
           fi
 
+      ## build
       - name: Build kernel
         run: |
           sudo -u runner makepkg
       
-      - name: Upload packages
+      - name: Upload packages as artifact
         uses: actions/upload-artifact@v3
         with:
           retention-days: 7
@@ -134,16 +146,47 @@ jobs:
       image: archlinux:base-devel
     timeout-minutes: 360
     steps:
-      - name: Prepare
+      - name: Prepare packages
         run: |
-          pacman -Syu --noconfirm --needed git rsync
+          pacman -Syu --noconfirm --needed ccache git rsync
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+          cd /bin
+          ln -sf nvim vi
+          
+      ## debugging
+      - name: ssh debug
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+      - name: Install additional packages
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        run: |
+          pacman -Syu --noconfirm --needed neovim htop dust
+          ln -sf /usr/bin/nvim /bin/vi
+
+      ## prepare
+      - uses: actions/checkout@v3
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with: 
+          append-timestamp: false
+          key: extramodules_build
+          max-size: 512M
+
+      - name: Prepare runner user
+        run: |
+          # add user
           useradd -m runner
           echo 'runner ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
-     
-      - uses: actions/checkout@v3
+          # ccache
+          mkdir -p ~runner/.config
+          chown runner:runner ~runner/.config
+          cp -r ~/.config/ccache ~runner/.config/ccache
           
-      - uses: actions/download-artifact@v3
+      - name: Download kernel packages
+        uses: actions/download-artifact@v3
         with:
           name: kernel
           path: kernel
@@ -158,15 +201,15 @@ jobs:
       
       - name: Build package
         run: |
-          cd extra/nvidia
+          pushd extra/nvidia
           sudo -u runner makepkg -s --noconfirm
       
-      - name: Upload package
+      - name: Upload package as artifact
         uses: actions/upload-artifact@v3
         with:
           retention-days: 7
           name: extramodule_nvidia
-          path: '*.pkg.tar.zst'
+          path: 'extra/nvidia/*.pkg.tar.zst'
 
   release:
     needs:
@@ -178,16 +221,15 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: kernel
-          path: kernel
-      - name: Fetch extra packages (nvidia)
+      - name: Fetch packages for extra modules (nvidia)
         uses: actions/download-artifact@v3
         with:
           name: extramodule_nvidia
-          path: extra
+
       - name: Release packages
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            'kernel/*.pkg.tar.zst'
-            'extra/*.pkg.tar.zst'
+            '*.pkg.tar.zst'
+            'extra/nvidia/*.pkg.tar.zst'

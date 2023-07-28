@@ -83,10 +83,20 @@ jobs:
           cp -r ~/.config/ccache ~runner/.config/ccache
 
       - name: Prepare source and install build dependencies
+        id: prepare_source
+        shell: bash
         run: |
           chown -R runner:runner .
           sudo -u runner cp dist/options-znver2.conf options.conf
           sudo -u runner makepkg --nobuild --holdver --noextract -s --noconfirm
+          source PKGBUILD > /dev/null
+          echo "tarball=${pkgname}-${pkgver}-${pkgrel}-${arch}.tar.gz"
+
+      - name: Restore source tarball cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ steps.prepare_source.outputs.tarball }}
+          key: tarball
 
       # A full kernel build requires at least 28GB of free space.
       - name: Free up space for building kernel
@@ -131,6 +141,28 @@ jobs:
       - name: Build kernel
         run: |
           sudo -u runner makepkg
+
+      ## post build
+      - name: Remove old build cache
+        shell: bash
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: kernel_build
+      - name: Remove old source cache
+        shell: bash
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: tarball
+
+      - name: Cache source tarball
+        uses: actions/cache/save@v3
+        with:
+          path: ${{ steps.prepare_source.outputs.tarball }}
+          key: tarball
       
       - name: Upload packages as artifact
         uses: actions/upload-artifact@v3
@@ -210,6 +242,15 @@ jobs:
           retention-days: 7
           name: extramodule_nvidia
           path: 'extra/nvidia/*.pkg.tar.zst'
+            ## post build
+            
+      - name: Remove old build cache
+        shell: bash
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: extramodules_build
 
   release:
     needs:

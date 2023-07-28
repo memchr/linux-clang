@@ -224,11 +224,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: kernel
-          path: kernel
       
       - name: Install kernel
         run: |
-          pacman -U --noconfirm kernel/*
+          pacman -U --noconfirm *.pkg.tar.zst
       
       - name: Install nvidia kernel module
         run: |

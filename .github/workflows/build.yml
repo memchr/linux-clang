@@ -233,6 +233,11 @@ jobs:
         run: |
           pacman -S --noconfirm nvidia-dkms
       
+      - name: Prepare source
+        shell: bash
+        run: |
+          chown -R runner:runner .
+      
       - name: Build package
         run: |
           pushd extra/nvidia

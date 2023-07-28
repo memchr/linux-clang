@@ -183,7 +183,7 @@ jobs:
     steps:
       - name: Prepare packages
         run: |
-          pacman -Syu --noconfirm --needed ccache git rsync
+          pacman -Syu --noconfirm --needed ccache git rsync clang llvm lld
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
           cd /bin
           ln -sf nvim vi
@@ -224,15 +224,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: kernel
-          path: kernel
       
       - name: Install kernel
         run: |
-          pacman -U --noconfirm kernel/*
+          pacman -U --noconfirm *.pkg.tar.zst
       
       - name: Install nvidia kernel module
         run: |
-          pacman -S --noconfirm nvidia-dksm
+          pacman -S --noconfirm nvidia-dkms
+      
+      - name: Prepare source
+        shell: bash
+        run: |
+          chown -R runner:runner .
       
       - name: Build package
         run: |

@@ -183,7 +183,7 @@ jobs:
     steps:
       - name: Prepare packages
         run: |
-          pacman -Syu --noconfirm --needed ccache git rsync clang llvm lld
+          pacman -Syu --noconfirm --needed ccache git rsync
           echo 'root ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
           cd /bin
           ln -sf nvim vi

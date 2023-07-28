@@ -33,7 +33,7 @@ permissions:
   actions: write
 
 jobs:
-  kernel:
+  linux-clang:
     runs-on: ubuntu-latest
     strategy:
       # Disable fail-fast, as the ssh debugging step may fail during the build process.
@@ -175,7 +175,7 @@ jobs:
           path: '*.pkg.tar.zst'
   
   extra_modules_nvidia:
-    needs: kernel
+    needs: linux-clang
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel
@@ -261,7 +261,7 @@ jobs:
 
   release:
     needs:
-      - kernel
+      - linux-clang
       - extra_modules_nvidia
     runs-on: ubuntu-latest
     steps:

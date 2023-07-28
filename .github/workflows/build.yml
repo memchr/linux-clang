@@ -280,4 +280,3 @@ jobs:
         with:
           files: |
             '*.pkg.tar.zst'
-            'extra/nvidia/*.pkg.tar.zst'

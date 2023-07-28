@@ -95,8 +95,8 @@ jobs:
       - name: Restore source tarball cache
         uses: actions/cache/restore@v3
         with:
+          key: kernel_tarball
           path: ${{ steps.prepare_source.outputs.tarball }}
-          key: tarball
 
       # A full kernel build requires at least 28GB of free space.
       - name: Free up space for building kernel
@@ -156,13 +156,13 @@ jobs:
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_KEY: tarball
+          CACHE_KEY: kernel_tarball
 
       - name: Cache source tarball
         uses: actions/cache/save@v3
         with:
           path: ${{ steps.prepare_source.outputs.tarball }}
-          key: tarball
+          key: kernel_tarball
       
       - name: Upload packages as artifact
         uses: actions/upload-artifact@v3
@@ -243,7 +243,7 @@ jobs:
           name: extramodule_nvidia
           path: 'extra/nvidia/*.pkg.tar.zst'
             ## post build
-            
+
       - name: Remove old build cache
         shell: bash
         run: |

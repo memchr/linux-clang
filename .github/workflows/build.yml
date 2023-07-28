@@ -152,7 +152,7 @@ jobs:
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_KEY: kernel_build
+          CACHE_KEY: ccache-kernel_build-
       - name: Remove old source cache
         shell: bash
         run: |
@@ -253,7 +253,7 @@ jobs:
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_KEY: extramodules_build
+          CACHE_KEY: ccache-extramodules_build-
 
   release:
     needs:

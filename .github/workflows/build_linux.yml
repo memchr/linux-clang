@@ -1,0 +1,37 @@
+name: build linux kernel
+
+on:
+  workflow_call:
+    inputs:
+      march:
+        type: string
+        description: target micro architecure
+        required: false
+        default: generic
+      pkgver:
+        type: string
+        description: linux release version (if blank, use value from PKGBUILD)
+        required: false
+      pkgrel:
+        type: string
+        description: reversion (if blank, use value from PKGBUILD)
+        required: false
+      make_jobs:
+        type: number
+        description: number of parallel make jobs
+        required: false
+        default: 3 
+          
+    
+jobs:
+  build_kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: debug output
+        run: |
+          echo "\
+          input.march: ${{inputs.march}}
+          input.pkgver: ${{inputs.pkgver}}
+          input.pkgrel: ${{inputs.pkgrel}}
+          input.make_jobs: ${{inputs.make_jobs}}
+          "

@@ -9,3 +9,11 @@ jobs:
     steps:
       - name: hello
         run: echo hello world from callee!
+      - name: create file
+        run: |
+          echo "my precious data" > file
+      - name: upload file as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact_1
+          path: file

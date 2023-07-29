@@ -1,0 +1,11 @@
+name: callee
+
+on:
+  workflow_call:
+
+jobs:
+  called:
+    runs-on: ubuntu-latest
+    steps:
+      - name: hello
+        run: echo hello world from callee!

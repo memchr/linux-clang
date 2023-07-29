@@ -1,5 +1,8 @@
 name: caller
-on: push
+on:
+  push:
+    paths:
+      - '.github/*'
 
 jobs:
   call_workflow:

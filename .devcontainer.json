@@ -1,0 +1,13 @@
+{
+	"customizations": {
+		"codespaces": {
+			"repositories": {
+				"memchr/codespaces-arch": {
+					"permissions": {
+						"issues": "write"
+					}
+				}
+			}
+		}
+	}
+}

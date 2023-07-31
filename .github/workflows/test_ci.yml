@@ -1,5 +1,6 @@
 name: caller
-on: push
+on:
+  workflow_dispatch:
 
 env:
   call: "false"

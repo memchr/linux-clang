@@ -8,7 +8,7 @@ on:
       debug:
         type: boolean
         description: 'Run the workflow in debugging mode'
-        required: false
+        # required: false
         default: true
 
 jobs:

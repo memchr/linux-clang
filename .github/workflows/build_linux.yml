@@ -6,7 +6,6 @@ on:
       march:
         type: string
         description: target micro architecure, 
-        required: false
         default: generic
       pkgver:
         type: string
@@ -19,12 +18,10 @@ on:
       make_jobs:
         type: number
         description: number of parallel make jobs
-        required: false
         default: 3 
       artifact:
         type: string
         description: name of the kernel package artifact
-        required: false
         default: liunx-clang
     
 jobs:

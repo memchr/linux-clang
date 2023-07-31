@@ -23,7 +23,11 @@ on:
         type: string
         description: name of the kernel package artifact
         default: liunx-clang
-    
+      debug:
+        type: boolean
+        description: run in debug mode
+        default: false
+
 jobs:
   build_kernel:
     runs-on: ubuntu-latest
@@ -39,10 +43,11 @@ jobs:
         run: |
           echo "::group::Build Configuration"
           echo "\
-          inputs.march: ${{inputs.march}}
-          inputs.pkgver: ${{inputs.pkgver}}
-          inputs.pkgrel: ${{inputs.pkgrel}}
-          inputs.make_jobs: ${{inputs.make_jobs}}
-          inputs.artifact: ${{inputs.artifact}}
-          inputs.debug: ${{inputs.debug}}"
+          Target Microarchitecture  : ${{inputs.march}}
+          version                   : ${{inputs.pkgver}}
+          Package Reversion         : ${{inputs.pkgrel}}
+          Parallel make Jobs        : ${{inputs.make_jobs}}
+          Aritifact Name            : ${{inputs.artifact}}
+          Workflow debug            : ${{env.debug}}
+          "
           echo "::endgroup::"

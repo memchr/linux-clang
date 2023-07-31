@@ -8,9 +8,10 @@ on:
       debug:
         type: boolean
         description: 'Run the workflow in debugging mode'
-        # required: false
-        default: true
-
+        default: false
+env:
+  debug: true
+  
 jobs:
   build_linux:
     name: Call build linux workflow
@@ -18,7 +19,10 @@ jobs:
     with:
       march: znver2
       make_jobs: 3
+      debug: ${{inputs.debug}}
   build_extra:
     name: Call build extramodules workflow
     needs: build_linux
     uses: ./.github/workflows/build_extra.yml
+    with:
+      debug: ${{inputs.debug}}

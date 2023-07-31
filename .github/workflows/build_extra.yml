@@ -11,6 +11,10 @@ on:
         type: string
         description: name of the kernel package artifact
         default: extramodules
+      debug:
+        type: boolean
+        description: run in debug mode
+        default: false
 
           
 jobs:

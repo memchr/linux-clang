@@ -17,13 +17,13 @@ jobs:
     with:
       march: znver2
       make_jobs: 3
-      debug: ${{inputs.debug}}
+      debug: ${{ false || inputs.debug}}
   build_extra:
     name: Build extra modules
     needs: build_linux
     uses: ./.github/workflows/build_extra.yml
     with:
-      debug: ${{inputs.debug}}
+      debug: ${{ false || inputs.debug}}
   release:
     name: Publish release
     needs: build_extra

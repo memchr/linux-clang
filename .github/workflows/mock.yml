@@ -1,0 +1,25 @@
+name: mock
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch: 
+    inputs:
+      debug:
+        type: boolean
+        description: 'Run the workflow in debugging mode'
+        required: false
+        default: true
+
+jobs:
+  build_linux:
+    name: Call build linux workflow
+    uses: ./.github/workflows/build_linux.yml
+    with:
+      march: znver2
+      make_jobs: 3
+  build_extra:
+    name: Call build extramodules workflow
+    needs: build_linux
+    uses: ./.github/workflows/build_extra.yml

@@ -1,0 +1,22 @@
+name: Build and release linux-clang kernel and extra modules
+
+on:
+  workflow_dispatch: 
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+jobs:
+  build_linux:
+    name: Call build linux workflow
+    uses: ./.github/workflows/build_linux.yml
+    with:
+      march: znver2
+      make_jobs: 3
+  build_extra:
+    name: Call build extramodules workflow
+    needs: build_linux
+    uses: ./.github/workflows/build_extra.yml

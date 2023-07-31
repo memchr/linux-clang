@@ -26,20 +26,26 @@ on:
         description: name of the kernel package artifact
         required: false
         default: liunx-clang
-
-env:
-  artifact: linux-clang
     
 jobs:
   build_kernel:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+      volumes:
+        - /:/host
     steps:
-      - name: debug output
+      - name: Prepare
         run: |
+          echo "::group::Build Configuration"
           echo "\
-          input.march: ${{inputs.march}}
-          input.pkgver: ${{inputs.pkgver}}
-          input.pkgrel: ${{inputs.pkgrel}}
-          input.make_jobs: ${{inputs.make_jobs}}
-          input.artifact: ${{inputs.artifact}}
-          "
+          inputs.march: ${{inputs.march}}
+          inputs.pkgver: ${{inputs.pkgver}}
+          inputs.pkgrel: ${{inputs.pkgrel}}
+          inputs.make_jobs: ${{inputs.make_jobs}}
+          inputs.artifact: ${{inputs.artifact}}
+          inputs.debug: ${{inputs.debug}}"
+          echo "::endgroup::"

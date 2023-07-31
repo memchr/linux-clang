@@ -8,6 +8,12 @@ on:
         description: "target linux-clang kernel release (if blank, use artifact:package_linux)"
         required: false
         default: generic
+      artifact:
+        type: string
+        description: name of the kernel package artifact
+        required: false
+        default: extramodules
+
           
 jobs:
   build_kernel:
@@ -17,4 +23,5 @@ jobs:
         run: |
           echo "\
           input.target: ${{inputs.target}}
+          input.artifact: ${{inputs.artifact}}
           "

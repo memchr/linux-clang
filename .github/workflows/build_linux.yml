@@ -1,5 +1,5 @@
 name: build linux kernel
-# This workflow produces the artefact: "package_linux".
+# This workflow produces the artifact: "package_linux".
 on:
   workflow_call:
     inputs:
@@ -21,7 +21,14 @@ on:
         description: number of parallel make jobs
         required: false
         default: 3 
-          
+      artifact:
+        type: string
+        description: name of the kernel package artifact
+        required: false
+        default: liunx-clang
+
+env:
+  artifact: linux-clang
     
 jobs:
   build_kernel:
@@ -34,4 +41,5 @@ jobs:
           input.pkgver: ${{inputs.pkgver}}
           input.pkgrel: ${{inputs.pkgrel}}
           input.make_jobs: ${{inputs.make_jobs}}
+          input.artifact: ${{inputs.artifact}}
           "

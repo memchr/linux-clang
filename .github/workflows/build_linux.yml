@@ -164,7 +164,7 @@ jobs:
           # su -c "makepkg --noconfirm -fs" builder
           su -c "makepkg --nobuild --noextract --nodeps" builder
           echo 'int main() {return 0;}' > src.c
-          su -c "ccache gcc -c src.c" 
+          su -c "ccache gcc -c src.c" builder
           tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null
       
       - name: Remove old ccache

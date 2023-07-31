@@ -97,7 +97,7 @@ jobs:
           chown -R builder:builder .
       
       - name: Build extra module
-        run:
+        run: |
           cd extra/nvidia
           tar --zstd -cf extra.pkg.tar.zst -T /dev/null
         

@@ -12,6 +12,11 @@ on:
         description: run in debug mode
         default: false
 
+permissions:
+  contents: write
+  actions: write
+
+
 jobs:
   build_kernel:
     runs-on: ubuntu-latest

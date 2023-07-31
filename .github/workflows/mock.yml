@@ -29,5 +29,4 @@ jobs:
     needs: 
       - build_extra
       - build_linux
-    if: false
     uses: ./.github/workflows/release.yml

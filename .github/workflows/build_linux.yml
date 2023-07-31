@@ -36,6 +36,10 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   build_kernel:
     runs-on: ubuntu-latest

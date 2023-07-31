@@ -1,11 +1,11 @@
 name: build linux kernel
-
+# This workflow produces the artefact: "package_linux".
 on:
   workflow_call:
     inputs:
       march:
         type: string
-        description: target micro architecure
+        description: target micro architecure, 
         required: false
         default: generic
       pkgver:

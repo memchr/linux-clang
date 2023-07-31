@@ -1,0 +1,19 @@
+name: caller
+on: push
+
+env:
+  call: "false"
+jobs:
+  call_build_linux:
+    if: false
+    uses: ./.github/workflows/build_linux.yml
+    with:
+      march: znver2
+      pkgver: '6.4.7'
+      pkgrel: '2'
+      make_jobs: 2
+  call_build_extra:
+    if: false
+    uses: ./.github/workflows/build_extra.yml
+    with:
+      target: '6.4.7'

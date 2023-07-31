@@ -1,0 +1,20 @@
+name: build linux kernel
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        description: "target linux-clang kernel release (if blank, use artifact:package_linux)"
+        required: false
+        default: generic
+          
+jobs:
+  build_kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: debug output
+        run: |
+          echo "\
+          input.target: ${{inputs.target}}
+          "

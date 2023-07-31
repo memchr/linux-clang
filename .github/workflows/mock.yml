@@ -26,6 +26,8 @@ jobs:
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
   release:
     name: Publish release
-    needs: build_extra
+    needs: 
+      - build_extra
+      - build_linux
     if: false
     uses: ./.github/workflows/release.yml

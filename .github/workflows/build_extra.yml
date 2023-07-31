@@ -59,7 +59,7 @@ jobs:
 
       - name: Debug workflow with ssh
         uses: mxschmitt/action-tmate@v3
-        if: ${{ inputs.debug }}
+        if: ${{ !github.event.act && inputs.debug }}
         with:
           detached: true
       

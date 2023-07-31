@@ -94,7 +94,7 @@ jobs:
 
       - name: Debug workflow with ssh
         uses: mxschmitt/action-tmate@v3
-        if: ${{ inputs.debug }}
+        if: ${{ !github.event.act && inputs.debug }}
         with:
           detached: true
 
@@ -162,7 +162,7 @@ jobs:
         id: build
         run: |
           # su -c "makepkg --noconfirm -fs" builder
-          su -c "makepkg --nobuild --noextract --nodeps" builder
+          su -c "makepkg --nobuild --noconfirm -fs" builder
           echo 'int main() {return 0;}' > src.c
           su -c "ccache gcc -c src.c" builder
           tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null

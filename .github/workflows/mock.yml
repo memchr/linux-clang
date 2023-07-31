@@ -19,10 +19,10 @@ jobs:
     with:
       march: znver2
       make_jobs: 3
-      arg: ${{inputs.debug}}
+      debug: true
   build_extra:
     name: Call build extramodules workflow
     needs: build_linux
     uses: ./.github/workflows/build_extra.yml
     with:
-      arg: ${{inputs.debug}}
+      debug: true

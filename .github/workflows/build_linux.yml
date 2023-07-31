@@ -48,5 +48,5 @@ jobs:
           Package Reversion         : ${{inputs.pkgrel}}
           Parallel make Jobs        : ${{inputs.make_jobs}}
           Aritifact Name            : ${{inputs.artifact}}
-          Workflow debug            : ${{env.debug}}"
+          Workflow debug            : ${{inputs.debug}}"
           echo "::endgroup::"

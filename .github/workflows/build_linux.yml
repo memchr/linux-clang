@@ -26,7 +26,7 @@ on:
       artifact:
         type: string
         description: name of the buildt package artifact
-        default: liunx-clang
+        default: linux-clang
       debug:
         type: boolean
         description: run in debug mode
@@ -168,6 +168,7 @@ jobs:
           tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null
       
       - name: Remove old ccache
+        if: ${{!github.event.act}}
         run: |
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
         env:
@@ -175,14 +176,14 @@ jobs:
           CACHE_KEY: ccache-linux-clang-
       
       - name: Update package cache (remove old cache)
-        if: ${{ steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' && !github.event.act }}
         run: |
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_KEY: pkg-linux-clang
       - name: Update package cache (save new package)
-        if: ${{ steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' && !github.event.act }}
         uses: actions/cache/save@v3
         with:
           key: pkg-linux-clang

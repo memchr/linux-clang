@@ -66,6 +66,10 @@ validpgpkeys=(
 b2sums=('SKIP'
         'a73a9eaa59dd45ccdd564b762c3816342873e9002c54b742f481ccd79c34549131ab3b0188445139b9e5fab696b60270f8148337387619456b4674d6ff28ccb7')
 
+## update pkgver and pkgrel
+pkgver="${_pkgver:-$pkgver}"
+pkgrel="${_pkgrel:-$pkgrel}"
+
 ## Kernel optitmization
 _kcflags=(
   "$_optimization"
@@ -92,6 +96,8 @@ echo -n "\
     Source Type = $( ((_use_tarball)) && echo tarball || echo git)
 :: Build Options
     Kernel Name = $_kernel_name
+    pkgver      = $pkgver
+    pkgrel      = $pkgrel
     Compiler    = $( ((_use_clang)) && echo clang || echo gcc )
     LTO         = $( ((_use_clang)) && echo thin || echo none )
     KCFLAGS     = \"${_kcflags[@]}\"

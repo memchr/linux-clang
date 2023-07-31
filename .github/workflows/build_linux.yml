@@ -5,8 +5,12 @@ on:
     inputs:
       march:
         type: string
-        description: target micro architecure, 
-        default: generic
+        description: target micro architecture, 
+        default: x86-64-v3
+      optimization:
+        type: string
+        description: KCFLGG related to optimization
+        default: -O2
       pkgver:
         type: string
         description: linux release version (if blank, use value from PKGBUILD)
@@ -21,12 +25,16 @@ on:
         default: 3 
       artifact:
         type: string
-        description: name of the kernel package artifact
+        description: name of the buildt package artifact
         default: liunx-clang
       debug:
         type: boolean
         description: run in debug mode
         default: false
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   build_kernel:
@@ -43,10 +51,142 @@ jobs:
         run: |
           echo "::group::Build Configuration"
           echo "\
-          Target Microarchitecture  : ${{inputs.march}}
-          version                   : ${{inputs.pkgver}}
-          Package Reversion         : ${{inputs.pkgrel}}
-          Parallel make Jobs        : ${{inputs.make_jobs}}
-          Aritifact Name            : ${{inputs.artifact}}
-          Workflow debug            : ${{inputs.debug}}"
+          Target Microarchitecture    : ${{inputs.march}}
+          Optimization flag           : ${{inputs.optimization}}
+          Version (pkgver)            : ${{inputs.pkgver}}
+          Package Reversion (pkgrel)  : ${{inputs.pkgrel}}
+          Parallel make Jobs          : ${{inputs.make_jobs}}
+          Aritifact Name              : ${{inputs.artifact}}
+          Workflow debug              : ${{inputs.debug}}"
           echo "::endgroup::"
+
+          echo "::group::Install essential packages"
+          packages=(
+            ccache
+            git
+            rsync
+            nodejs
+            clang
+            llvm
+            lld
+          )
+          if [[ "${{inputs.debug}}" == true ]]; then
+            packages+=(
+              neovim
+              htop
+              dust
+              bash-completion
+              tmate
+            )
+            ln -sf /usr/bin/nvim /bin/vi
+          fi
+          pacman -Syu --noconfirm --needed "${packages[@]}"
+          echo "::endgroup::"
+
+          echo "::group::Prepare builder user"
+          useradd -m builder
+          echo 'builder ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          echo "::endgroup::"
+
+      - name: Debug workflow with ssh
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug }}
+        with:
+          detached: true
+
+      - uses: actions/checkout@v3
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          append-timestamp: false
+          key: linux-clang
+          max-size: 4096M
+
+      - name: Prepare source and build environment
+        id: prepare_src
+        run: |
+          echo "::group::Setup ccache"
+          su -c 'mkdir -p ~/.config/ccache' builder
+          install -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
+          echo "::endgroup::"
+
+          echo "::group::Apply build configuration"
+          {
+            echo "\
+            _march=${{inputs.march}}
+            _optimization=${{inputs.optimization}}
+            _make_jobs=${{inputs.make_jobs}}"
+            [[ -n "${{inputs.pkgver}}" ]] && echo "_pkgver=${{inputs.pkgver}}"
+            [[ -n "${{inputs.pkgrel}}" ]] && echo "_pkgrel=${{inputs.pkgrel}}"
+            true
+          } | tee options.conf
+          echo "::endgroup::"
+
+          echo "Fix permissions"
+          chown -R builder:builder .
+
+          source PKGBUILD > /dev/null
+          echo "srctag=${_srctag}" >> ${GITHUB_OUTPUT}
+        
+      - name: Source tarball cache
+        uses: actions/cache@v3
+        with:
+          key: "${{ steps.prepare_src.outputs.srctag }}_tarball"
+          path: "${{ steps.prepare_src.outputs.srctag }}.tar.gz"
+      
+      - name: Free up spaces
+        if: ${{!github.event.act}}
+        run: |
+          mkdir /empty -p
+          _files=(
+            /usr/local/lib/android
+            /usr/local/.ghcup
+            /usr/local/share/powershell
+            /usr/local/share/chromium
+            /usr/local/share/vcpkg
+            /usr/share/dotnet
+            /usr/share/swift
+            /opt/hostedtoolcache/CodeQL
+          )
+          for f in ${_files[@]}; do 
+            rsync -r --delete /empty/ "/host/$f"
+          done
+      
+      - name: Build kernel
+        continue-on-error: true
+        id: build
+        run: |
+          # su -c "makepkg --noconfirm -fs" builder
+          su -c "makepkg --nobuild --noextract --nodeps" builder
+          echo 'int main() {return 0;}' > src.c
+          su -c "ccache gcc -c src.c" 
+          tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null
+      
+      - name: Remove old ccache
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: ccache-linux-clang-
+      
+      - name: Update package cache (remove old cache)
+        if: ${{ steps.build.outcome == 'success' }}
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: pkg-linux-clang
+      - name: Update package cache (save new package)
+        if: ${{ steps.build.outcome == 'success' }}
+        uses: actions/cache/save@v3
+        with:
+          key: pkg-linux-clang
+          path: '*.pkg.tar.zst'
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 7
+          name: ${{inputs.artifact}}
+          path: '*.pkg.tar.zst'

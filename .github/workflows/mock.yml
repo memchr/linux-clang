@@ -9,20 +9,23 @@ on:
         type: boolean
         description: 'Run the workflow in debugging mode'
         default: false
-env:
-  debug: "${{ true || inputs.debug }}"
   
 jobs:
   build_linux:
-    name: Call build linux workflow
+    name: Build linux kernel
     uses: ./.github/workflows/build_linux.yml
     with:
       march: znver2
       make_jobs: 3
-      debug: ${{env.debug}}
+      debug: ${{inputs.debug}}
   build_extra:
-    name: Call build extramodules workflow
+    name: Build extra modules
     needs: build_linux
     uses: ./.github/workflows/build_extra.yml
     with:
-      debug: ${{env.debug}}
+      debug: ${{inputs.debug}}
+  release:
+    name: Publish release
+    needs: build_extra
+    if: false
+    uses: ./.github/workflows/release.yml

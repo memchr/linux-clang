@@ -9,7 +9,11 @@ on:
         type: boolean
         description: 'Run the workflow in debugging mode'
         default: false
-  
+
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   build_linux:
     name: Build linux kernel

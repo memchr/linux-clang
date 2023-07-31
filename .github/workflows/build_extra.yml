@@ -16,9 +16,8 @@ permissions:
   contents: write
   actions: write
 
-
 jobs:
-  build_kernel:
+  build_extra_modules:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:

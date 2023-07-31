@@ -1,6 +1,9 @@
-name: caller
+name: mock_test
 on:
   workflow_dispatch:
+  push:
+    paths:
+      '.github/**'
 
 jobs:
   call_build_linux:

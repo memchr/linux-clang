@@ -6,7 +6,7 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch: 
     inputs:
-      debug_enabled:
+      debug:
         type: boolean
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         default: false

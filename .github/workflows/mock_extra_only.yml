@@ -1,4 +1,4 @@
-name: mock
+name: mock extra modules
 
 on:
   push:

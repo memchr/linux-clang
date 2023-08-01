@@ -187,7 +187,7 @@ jobs:
           echo "::endgroup::"
           
           if [[ "${{steps.build.outcome}}" != success ]]; then
-            echo "ERROR: Kernel build failed, Abort the workflow"
+            echo "::error::Kernel build failed, Abort the workflow"
             exit 1
           fi
         env:

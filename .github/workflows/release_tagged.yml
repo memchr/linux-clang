@@ -22,7 +22,6 @@ jobs:
     uses: ./.github/workflows/build_linux.yml
     with:
       march: znver2
-      make_jobs: 3
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
   cache_linux_package:
     name: Cache linux package

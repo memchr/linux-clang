@@ -45,11 +45,11 @@ jobs:
           if [[ "${{startsWith(github.ref, 'refs/tags')}}" == true ]]; then
             tag="$GITHUB_REF_NAME"
           elif [[ "${{inputs.release_linux}}" == true ]]; then
-            tag="$(echo linux*headers*pkg.tar.zst "$(date +%s)" | sed 's/linux.*headers-//; s/-x86_64.pkg.tar.zst//;')"
+            version="$(echo linux*headers*pkg.tar.zst |  sed 's/linux.*headers-//; s/-x86_64.pkg.tar.zst//;')"
           else
-            tag="$(echo *pkg.tar.zst "$(date +%s)" | sed 's/-x86_64.pkg.tar.zst//')"
+            version="$(echo nvidia*pkg.tar.zst | sed 's/-x86_64.pkg.tar.zst//')"
           fi
-          echo "tag=$tag" >> "${GITHUB_OUTPUT}"
+          echo "tag=${version}-$(date +%s)" >> "${GITHUB_OUTPUT}"
       - name: Create release
         if: ${{!inputs.mock}}
         uses: softprops/action-gh-release@v1

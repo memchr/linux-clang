@@ -63,7 +63,7 @@ jobs:
 
           echo "::group::Prepare builder user"
           useradd -m builder
-          echo 'builder ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          echo 'builder ALL=(ALL:ALL) NOPASSWD: ALL' | tee /etc/sudoers.d/builder
           echo "::endgroup::"
 
       - name: Debug workflow with ssh
@@ -91,21 +91,28 @@ jobs:
         run: |
           echo "::group::Configure ccache"
           su -c 'mkdir -p ~/.config/ccache' builder
-          install -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
+          install -v -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
           echo "::endgroup::"
 
           echo "::group::Install nvidia-dkms"
-          CC=true pacman -S --noconfirm nvidia-dkms
+          pacman -S --noconfirm nvidia-dkms
+          echo "::endgroup::"
+
+          echo "::group::Remove bogus alpm hooks"
+          rm -f /usr/share/libalpm/hooks/*dkms*.hook
+          rm -f /usr/share/libalpm/hooks/*mkinitcpio*.hook
           echo "::endgroup::"
 
           if [[ "${{inputs.mock }}" != true ]]; then
             echo "::group::Install linux-clang packages"
-            pacman -S --noconfirm -U *.pkg.tar.zst
+            pacman --noconfirm -U *.pkg.tar.zst
             echo "::endgroup::"
           fi
           
-          echo "Fix permissions"
-          chown -R builder:builder .
+          echo "::group::Fix permissions"
+          chown -Rv builder:builder .
+          chown -Rv builder:builder /var/lib/dkms
+          echo "::endgroup::"
       
       - name: Build extra module
         run: |

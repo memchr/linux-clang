@@ -1,0 +1,36 @@
+name: mock
+
+on:
+  push:
+    paths: ".github/**"
+  workflow_dispatch: 
+    inputs:
+      debug:
+        type: boolean
+        description: 'Run the workflow in debugging mode'
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  cache_linux_package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download linux-clang release
+        run: |
+          curl -LO https://github.com/memchr/linux-clang/releases/download/6.4.6.arch1-5/linux-clang-6.4.6.arch1-5-x86_64.pkg.tar.zst
+          curl -LO https://github.com/memchr/linux-clang/releases/download/6.4.6.arch1-5/linux-clang-headers-6.4.6.arch1-5-x86_64.pkg.tar.zst
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          key: linux-clang-pkg
+          path: '*.pkg.tar.zst'
+  build_extra:
+    name: Build extra modules
+    # needs: cache_linux_package
+    uses: ./.github/workflows/build_extra.yml
+    with:
+      debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      mock: false

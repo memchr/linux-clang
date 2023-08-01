@@ -1,6 +1,7 @@
 # Maintainer: memchr <memchr@proton.me>
 # Contributor: Sven-Hendrik Haase <svenstaro@archlinux.org>
 # Contributor: Eric Bélanger <eric@archlinux.org>
+# shellcheck disable=SC2034,SC1091,SC2148,SC2155,SC2154
 IFS="-" read -ra _tmp <<< $(pacman -Q nvidia-dkms | cut -d' ' -f2)
 pkgver="${_tmp[0]}"
 pkgrel="${_tmp[1]}"
@@ -35,11 +36,13 @@ build() {
     sudo chown 1000:1000 "$_thinlto_cache"
 
     # ssl key work around
-    sudo chmod 755 /var/lib/dkms/mok.key
+    [[ -e /var/lib/dkms/mok.key ]] && \
+        sudo chmod 755 /var/lib/dkms/mok.key
 
-    fakeroot dkms build --dkmstree "${srcdir}" -m nvidia/${pkgver} -k ${_kernver}
+    fakeroot dkms build --dkmstree "${srcdir}" -m "nvidia/${pkgver}" -k "${_kernver}"
 
-    sudo chmod 700 /var/lib/dkms/mok.key
+    [[ -e /var/lib/dkms/mok.key ]] && \
+        sudo chmod 700 /var/lib/dkms/mok.key
 }
 
 package() {

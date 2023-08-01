@@ -94,7 +94,7 @@ jobs:
 
           echo "::group::Prepare builder user"
           useradd -m builder
-          echo 'builder ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          echo 'builder ALL=(ALL:ALL) NOPASSWD: ALL' | tee /etc/sudoers.d/builder
           echo "::endgroup::"
 
       - name: Debug workflow with ssh
@@ -117,7 +117,7 @@ jobs:
         run: |
           echo "::group::Configure ccache"
           su -c 'mkdir -p ~/.config/ccache' builder
-          install -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
+          install -v -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
           echo "::endgroup::"
 
           echo "::group::Apply build configuration"
@@ -132,8 +132,9 @@ jobs:
           } | tee options.conf
           echo "::endgroup::"
 
-          echo "Fix permissions"
-          chown -R builder:builder .
+          echo "::group::Fix permissions"
+          chown -Rv builder:builder .
+          echo "::endgroup::"
 
           source PKGBUILD > /dev/null
           echo "srctag=${_srctag}" >> ${GITHUB_OUTPUT}

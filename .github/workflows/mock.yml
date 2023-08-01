@@ -22,7 +22,7 @@ jobs:
       march: znver2
       make_jobs: 3
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
-      mock: true
+      mock: false
   cache_linux_package:
     name: Cache linux package
     needs: build_linux
@@ -33,7 +33,7 @@ jobs:
     uses: ./.github/workflows/build_extra.yml
     with:
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
-      mock: true
+      mock: false
   release:
     name: Publish release
     needs: 

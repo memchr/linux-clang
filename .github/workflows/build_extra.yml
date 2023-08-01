@@ -99,8 +99,8 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::Remove bogus alpm hooks"
-          rm -f /usr/share/libalpm/hooks/*dkms*.hook
-          rm -f /usr/share/libalpm/hooks/*mkinitcpio*.hook
+          rm -vf /usr/share/libalpm/hooks/*dkms*.hook
+          rm -vf /usr/share/libalpm/hooks/*mkinitcpio*.hook
           echo "::endgroup::"
 
           if [[ "${{inputs.mock }}" != true ]]; then

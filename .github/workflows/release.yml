@@ -6,23 +6,23 @@ on:
       artifact_linux:
         type: string
         description: name of linux kernel package artifact
-        required: false
         default: linux-clang
       artifact_extra:
         type: string
         description: name of extra modules package artifact
-        required: false
         default: extramodules
       release_linux:
         type: boolean
         description: if true, release the linux kernel package
-        required: false
         default: true
       release_extra:
         type: boolean
         description: if true, release the extra modules package
-        required: false
         default: true
+      mock:
+        type: boolean
+        description: mock mode
+        default: false
     
 jobs:
   release_packages:
@@ -40,8 +40,7 @@ jobs:
         with:
           name: ${{inputs.artifact_extra}}
       - name: Create release
-        run: echo Mock release
-        # uses: softprops/action-gh-release@v1
-        # with:
-        #   files: '*.pkg.tar.zst'
-
+        if: ${{!inputs.mock}}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: '*.pkg.tar.zst'

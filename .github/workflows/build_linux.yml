@@ -31,6 +31,10 @@ on:
         type: boolean
         description: run in debug mode
         default: false
+      mock:
+        type: boolean
+        description: run in mock mode
+        default: false
 
 defaults:
   run:
@@ -61,19 +65,20 @@ jobs:
           Package Reversion (pkgrel)  : ${{inputs.pkgrel}}
           Parallel make Jobs          : ${{inputs.make_jobs}}
           Aritifact Name              : ${{inputs.artifact}}
-          Workflow debug              : ${{inputs.debug}}"
+          Workflow debug              : ${{inputs.debug}}
+          Mock mode                   : ${{inputs.mock}}"
           echo "::endgroup::"
-
+          
           echo "::group::Install essential packages"
           packages=(
             ccache
             git
             rsync
-            nodejs
             clang
             llvm
             lld
           )
+          [[ -n "${{env.ACT}}" ]] && packages+=(nodejs)
           if [[ "${{inputs.debug}}" == true ]]; then
             packages+=(
               neovim
@@ -94,7 +99,7 @@ jobs:
 
       - name: Debug workflow with ssh
         uses: mxschmitt/action-tmate@v3
-        if: ${{ !github.event.act && inputs.debug }}
+        if: ${{ !env.ACT && inputs.debug }}
         with:
           detached: true
 
@@ -110,7 +115,7 @@ jobs:
       - name: Prepare source and build environment
         id: prepare_src
         run: |
-          echo "::group::Setup ccache"
+          echo "::group::Configure ccache"
           su -c 'mkdir -p ~/.config/ccache' builder
           install -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
           echo "::endgroup::"
@@ -140,7 +145,7 @@ jobs:
           path: "${{ steps.prepare_src.outputs.srctag }}.tar.gz"
       
       - name: Free up spaces
-        if: ${{!github.event.act}}
+        if: ${{!env.ACT && !inputs.mock }}
         run: |
           mkdir /empty -p
           _files=(
@@ -161,33 +166,32 @@ jobs:
         continue-on-error: true
         id: build
         run: |
-          # su -c "makepkg --noconfirm -fs" builder
-          su -c "makepkg --nobuild --noconfirm -fs" builder
-          echo 'int main() {return 0;}' > src.c
-          su -c "ccache gcc -c src.c" builder
-          tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null
+          if [[ "${{inputs.mock }}" != true ]]; then
+            su -c "makepkg --noconfirm -fs" builder
+          else
+            echo "::group::Mock Build"
+            su -c "makepkg --nobuild --noconfirm -fs" builder
+            echo 'int main() {return 0;}' > src.c
+            su -c "ccache gcc -c src.c" builder
+            tar --zstd -cf linux-clang.pkg.tar.zst -T /dev/null
+            echo "::endgroup::"
+          fi
       
-      - name: Remove old ccache
-        if: ${{!github.event.act}}
+      - name: Post build
         run: |
-          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+          echo "::group::Remove old ccache"
+          if [[ -z "${{env.ACT}}" ]]; then
+            curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "$GITHUB_API_URL/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+          fi
+          echo "::endgroup::"
+          
+          if [[ "${{steps.build.outcome}}" != success ]]; then
+            echo "ERROR: Kernel build failed, Abort the workflow"
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_KEY: ccache-linux-clang-
-      
-      - name: Update package cache (remove old cache)
-        if: ${{ steps.build.outcome == 'success' && !github.event.act }}
-        run: |
-          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_KEY: pkg-linux-clang
-      - name: Update package cache (save new package)
-        if: ${{ steps.build.outcome == 'success' && !github.event.act }}
-        uses: actions/cache/save@v3
-        with:
-          key: pkg-linux-clang
-          path: '*.pkg.tar.zst'
       
       - name: Upload artifact
         uses: actions/upload-artifact@v3

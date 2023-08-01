@@ -3,6 +3,10 @@ name: build linux kernel
 on:
   workflow_call:
     inputs:
+      linux_cache_key:
+        type: string
+        description: Key used to restore linux-clang package cache
+        default: linux-clang-pkg
       artifact:
         type: string
         description: name of the built package artifact
@@ -10,6 +14,10 @@ on:
       debug:
         type: boolean
         description: run in debug mode
+        default: false
+      mock:
+        type: boolean
+        description: run in mock mode
         default: false
 
 permissions:
@@ -26,7 +34,8 @@ jobs:
           echo "::group::Build Configuration"
           echo "\
           Aritifact Name            : ${{inputs.artifact}}
-          Workflow debug            : ${{inputs.debug}}"
+          Workflow debug            : ${{inputs.debug}}
+          Mock mode                 : ${{inputs.mock}}"
           echo "::endgroup::"
 
           echo "::group::Install essential packages"
@@ -34,11 +43,11 @@ jobs:
             ccache
             git
             rsync
-            nodejs
             clang
             llvm
             lld
           )
+          [[ -n "${{env.ACT}}" ]] && packages+=(nodejs)
           if [[ "${{inputs.debug}}" == true ]]; then
             packages+=(
               neovim
@@ -59,7 +68,7 @@ jobs:
 
       - name: Debug workflow with ssh
         uses: mxschmitt/action-tmate@v3
-        if: ${{ !github.event.act && inputs.debug }}
+        if: ${{ !env.ACT && inputs.debug }}
         with:
           detached: true
       
@@ -75,12 +84,12 @@ jobs:
       - name: Load kernel package from cache
         uses: actions/cache/restore@v3
         with:
-          key: pkg-linux-clang
+          key: ${{inputs.linux_cache_key}}
           path: '*.pkg.tar.zst'
       
       - name: Prepare source and build environment
         run: |
-          echo "::group::Setup ccache"
+          echo "::group::Configure ccache"
           su -c 'mkdir -p ~/.config/ccache' builder
           install -Dm644 ~/.config/ccache/ccache.conf ~builder/.config/ccache
           echo "::endgroup::"
@@ -89,9 +98,11 @@ jobs:
           CC=true pacman -S --noconfirm nvidia-dkms
           echo "::endgroup::"
 
-          echo "::group::Install linux-clang packages"
-          # pacman -S --noconfirm -U *.pkg.tar.zst
-          echo "::endgroup::"
+          if [[ "${{inputs.mock }}" != true ]]; then
+            echo "::group::Install linux-clang packages"
+            pacman -S --noconfirm -U *.pkg.tar.zst
+            echo "::endgroup::"
+          fi
           
           echo "Fix permissions"
           chown -R builder:builder .
@@ -99,11 +110,22 @@ jobs:
       - name: Build extra module
         run: |
           cd extra/nvidia
-          tar --zstd -cf extra.pkg.tar.zst -T /dev/null
+          if [[ "${{inputs.mock }}" != true ]]; then
+            su -c "makepkg --noconfirm -fs" builder
+          else
+            echo "::group::Mock Build"
+            tar --zstd -cf extra.pkg.tar.zst -T /dev/null
+            echo "::endgroup::"
+          fi
         
-      - name: Remove old ccache
+      - name: Post build
         run: |
-          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+          echo "::group::Remove old ccache"
+          if [[ -z "${{env.ACT}}" ]]; then
+            curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "$GITHUB_API_URL/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+          fi
+          echo "::endgroup::"
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_KEY: ccache-linux-extra-

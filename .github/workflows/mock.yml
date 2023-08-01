@@ -22,12 +22,18 @@ jobs:
       march: znver2
       make_jobs: 3
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      mock: true
+  cache_linux_package:
+    name: Cache linux package
+    needs: build_linux
+    uses: ./.github/workflows/cache_linux_package.yml
   build_extra:
     name: Build extra modules
-    needs: build_linux
+    needs: cache_linux_package
     uses: ./.github/workflows/build_extra.yml
     with:
       debug: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      mock: true
   release:
     name: Publish release
     needs: 

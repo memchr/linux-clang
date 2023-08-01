@@ -1,0 +1,34 @@
+name: Store/Update linux-clang package artifact in cache
+on:
+  workflow_call:
+    inputs:
+      cache_key:
+        type: string
+        description: Key used for caching linux-clang package
+        default: linux-clang-pkg
+      artifact:
+        type: string
+        description: name of the buildt package artifact
+        default: linux-clang
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download linux-clang package artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.artifact }}
+
+      - name: Update package cache (remove old cache)
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -X DELETE "https://api.github.com/repos/${{ github.repository }}/actions/caches?key=$CACHE_KEY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_KEY: ${{ inputs.cache_key }}
+
+      - name: Update package cache (save new package)
+        uses: actions/cache/save@v3
+        with:
+          key: ${{ inputs.cache_key }}
+          path: '*.pkg.tar.zst'

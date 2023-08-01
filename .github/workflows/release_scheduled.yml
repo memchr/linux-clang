@@ -1,4 +1,4 @@
-name: Build and release linux-clang kernel and extra modules
+name: Build and release linux-clang kernel and extra modules (scheduled)
 
 on:
   workflow_dispatch: 

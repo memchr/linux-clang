@@ -1,4 +1,4 @@
-name: build linux kernel
+name: Build linux kernel
 # This workflow produces the artifact: "package_linux".
 on:
   workflow_call:

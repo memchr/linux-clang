@@ -1,4 +1,4 @@
-name: build linux kernel
+name: Build extra modules
 
 on:
   workflow_call:

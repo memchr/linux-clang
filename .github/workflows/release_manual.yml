@@ -1,9 +1,9 @@
-name: Build and release linux-clang kernel and extra modules (tagged)
+name: Build and release linux-clang kernel and extra modules (manual)
 
 on:
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+*'
+    branches: 
+      - release
   workflow_dispatch: 
     inputs:
       debug:

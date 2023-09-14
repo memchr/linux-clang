@@ -12,7 +12,7 @@ echo -e "\
 #######
 
 pkgbase="${_kernel_name}"
-pkgver=6.5.2.arch1
+pkgver=6.5.3.arch1
 pkgrel=1
 pkgdesc='Linux'
 _srctag=v${pkgver%.*}-${pkgver##*.}

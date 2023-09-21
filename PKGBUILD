@@ -1,4 +1,4 @@
-# Maintainer: Paul Airlock (memchr) <memchr@proton.me>
+# Maintainer: memchr <memchr@proton.me>
 # Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 # shellcheck disable=SC2034,SC1091,SC2148,SC2155,SC2154

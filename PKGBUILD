@@ -8,7 +8,7 @@ source default.conf || { echo "needs default.conf"; exit 1; }
 echo -e "\
 :: The build and source options can be configurated with 
    options.conf, see default.conf for the available options
-   and their defaults"
+   and their defaults" 1>&2
 #######
 
 pkgbase="${_kernel_name}"
@@ -104,7 +104,7 @@ echo -n "\
     Build docs  = $( (( _build_docs )) && echo yes || echo no )
     Make jobs   = $_make_jobs
     ccache      = $( (( _use_ccache )) && echo yes || echo no )
-"
+" 1>&2
 _buildinfo="$_optimization target:$([[ -n $_march ]] && echo $_march || echo generic) compiler:$( ((_use_clang)) && echo clang )"
 
 ## 

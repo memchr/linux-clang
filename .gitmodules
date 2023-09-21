@@ -2,3 +2,5 @@
 	path = aur/linux-clang
 	url = aur@aur.archlinux.org:linux-clang.git
 	branch = master
+[submodule "aur/linux-clang"]
+	branch = master

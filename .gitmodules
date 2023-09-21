@@ -1,0 +1,4 @@
+[submodule "aur"]
+	path = aur
+	url = aur@aur.archlinux.org:linux-clang.git
+	branch = master

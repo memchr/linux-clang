@@ -1,5 +1,6 @@
-# Maintainer: memchr <memchr@proton.me>
 # Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Luna D. Dragon (nullrequest) <nullreques [@] vivaldi.net>
+# Maintainer: memchr <memchr@proton.me>
 
 # shellcheck disable=SC2034,SC1091,SC2148,SC2155,SC2154
 # Use build.conf to override default build options

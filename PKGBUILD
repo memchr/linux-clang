@@ -202,7 +202,7 @@ _package() {
     DEPMOD=/doesnt/exist modules_install  # Suppress depmod
 
   # remove build and source links
-  rm "$modulesdir"/{source,build}
+  rm -rf "$modulesdir"/{source,build}
 }
 
 _package-headers() {
@@ -252,11 +252,11 @@ _package-headers() {
   for arch in "$builddir"/arch/*/; do
     [[ $arch = */x86/ ]] && continue
     echo "Removing $(basename "$arch")"
-    rm -r "$arch"
+    rm -rf "$arch"
   done
 
   echo "Removing documentation..."
-  rm -r "$builddir/Documentation"
+  rm -rf "$builddir/Documentation"
 
   echo "Removing broken symlinks..."
   find -L "$builddir" -type l -printf 'Removing %P\n' -delete

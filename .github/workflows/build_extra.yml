@@ -1,6 +1,24 @@
 name: Build extra modules
 
 on:
+  workflow_dispatch:
+    inputs:
+      linux_cache_key:
+        type: string
+        description: Key used to restore linux-clang package cache
+        default: linux-clang-pkg
+      artifact:
+        type: string
+        description: name of the built package artifact
+        default: extramodules
+      debug:
+        type: boolean
+        description: run in debug mode
+        default: false
+      mock:
+        type: boolean
+        description: run in mock mode
+        default: false
   workflow_call:
     inputs:
       linux_cache_key:

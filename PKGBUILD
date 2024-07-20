@@ -105,6 +105,20 @@ prepare() {
     -d DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
     -d DEBUG_INFO_DWARF4
     -d DEBUG_INFO_DWARF5 
+    # unused modules
+    -d DRM_I915
+    -d I915_GVT_KVMGT
+    -d WLAN_VENDOR_REALTEK
+    -d WLAN_VENDOR_ATH
+    -d WLAN_VENDOR_BROADCOM
+    -d WLAN_VENDOR_MEDIATEK
+    -d WLAN_VENDOR_MARVELL
+    -d NET_VENDOR_INTEL
+    -d NET_VENDOR_MELLANOX
+    -d NET_VENDOR_BROADCOM
+    -d NET_VENDOR_SOLARFLARE
+    -d NET_VENDOR_QLOGIC
+    -d NET_VENDOR_MARVELL
   )
   scripts/config "${_config[@]}"
   make olddefconfig

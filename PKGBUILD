@@ -1,6 +1,6 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgbase=linux-clang
+pkgbase=linux-llvm
 pkgver=6.10.arch1
 pkgrel=1
 pkgdesc='Linux'

@@ -21,6 +21,7 @@ _config=(
   # 
 
   # graphics
+  -d DRM_SSD130X
   -d DRM_GMA500     # legacy Intel IGPU
   -d DRM_I915
   -d DRM_MGAG200    # legacy Intel iGPU
@@ -50,6 +51,7 @@ _config=(
   -d NET_VENDOR_BROADCOM
   -d NET_VENDOR_BROCADE
   -d NET_VENDOR_CAVIUM
+  -d CHELSIO_LIB
   -d NET_VENDOR_CHELSIO
   -d NET_VENDOR_CISCO
   -d NET_VENDOR_DEC
@@ -65,6 +67,7 @@ _config=(
   -d NET_VENDOR_PENSANDO
   -d NET_VENDOR_QLOGIC
   -d NET_VENDOR_SAMSUNG
+  -d NET_VENDOR_STMICRO
   -d NET_VENDOR_SOLARFLARE
   -d NET_VENDOR_SOLARFLARE
   -d NET_VENDOR_WANGXUN
@@ -73,6 +76,11 @@ _config=(
   -d NET_DSA_MICROCHIP_KSZ_COMMON
   -d NET_DSA_MV88E6XXX
   -d NET_DSA_SJA1105
+  # scsi
+  -d SCSI_CXGB4_ISCSI
+  -d SCSI_CXGB3_ISCSI
+  -d SCSI_CHELSIO_FCOE
+  -d ISCSI_TARGET_CXGB4
   # file system
   -d OCFS2_FS   # Oracle cluster file system
   -d REISERFS_FS # murders wife

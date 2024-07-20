@@ -1,6 +1,6 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgbase=linux
+pkgbase=linux-clang
 pkgver=6.10.arch1
 pkgrel=1
 pkgdesc='Linux'
@@ -17,13 +17,9 @@ makedepends=(
   python
   tar
   xz
-
-  # htmldocs
-  graphviz
-  imagemagick
-  python-sphinx
-  python-yaml
-  texlive-latexextra
+  llvm
+  clang
+  lld
 )
 options=(
   !debug
@@ -55,7 +51,26 @@ b2sums=('bb243ea7493b9d63aa2df2050a3f1ae2b89ee84a20015239cf157e3f4f51c7ac5efedc8
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
-export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+export KBUILD_BUILD_TIMESTAMP="Tue, 19 Jan 2038 03:14:06 +0000"
+
+_kcflags=(
+  "-O2"
+  "-pipe"
+  "-march=native"
+  "-fdebug-prefix-map=$PWD/src/$_srcname=."
+)
+_load="${MAXLOAD}"
+unset MAXLOAD
+
+if command -v ccache > /dev/null; then
+  export CCACHE_NOHASHDIR=1
+  export CCACHE_BASEDIR="$PWD/src/$_srcname"
+  export PATH="/usr/lib/ccache/bin:$PATH"
+fi
+
+make() {
+  command make -j "$(nproc --all)" -l"$_load" LLVM=1 LLVM_IAS=1 KCFLAGS="${_kcflags[*]}" "$@"
+}
 
 prepare() {
   cd $_srcname
@@ -76,6 +91,20 @@ prepare() {
 
   echo "Setting config..."
   cp ../config .config
+  local _config=(
+    # Enable clang thin LTO
+    -d LTO_NONE
+    -e HAS_LTO_CLANG
+    -e LTO_CLANG_THIN
+    # enable rust
+    -e RUST
+    # do not build debug info
+    -e DEBUG_INFO_NONE
+    -d DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+    -d DEBUG_INFO_DWARF4
+    -d DEBUG_INFO_DWARF5 
+  )
+  scripts/config "${_config[@]}"
   make olddefconfig
   diff -u ../config .config || :
 
@@ -87,7 +116,6 @@ build() {
   cd $_srcname
   make all
   make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
-  make htmldocs
 }
 
 _package() {
@@ -127,7 +155,7 @@ _package() {
     DEPMOD=/doesnt/exist modules_install  # Suppress depmod
 
   # remove build link
-  rm "$modulesdir"/build
+  rm -rf "$modulesdir"/build
 }
 
 _package-headers() {
@@ -177,11 +205,11 @@ _package-headers() {
   for arch in "$builddir"/arch/*/; do
     [[ $arch = */x86/ ]] && continue
     echo "Removing $(basename "$arch")"
-    rm -r "$arch"
+    rm -rf "$arch"
   done
 
   echo "Removing documentation..."
-  rm -r "$builddir/Documentation"
+  rm -rf "$builddir/Documentation"
 
   echo "Removing broken symlinks..."
   find -L "$builddir" -type l -printf 'Removing %P\n' -delete
@@ -212,29 +240,9 @@ _package-headers() {
   ln -sr "$builddir" "$pkgdir/usr/src/$pkgbase"
 }
 
-_package-docs() {
-  pkgdesc="Documentation for the $pkgdesc kernel"
-
-  cd $_srcname
-  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
-
-  echo "Installing documentation..."
-  local src dst
-  while read -rd '' src; do
-    dst="${src#Documentation/}"
-    dst="$builddir/Documentation/${dst#output/}"
-    install -Dm644 "$src" "$dst"
-  done < <(find Documentation -name '.*' -prune -o ! -type d -print0)
-
-  echo "Adding symlink..."
-  mkdir -p "$pkgdir/usr/share/doc"
-  ln -sr "$builddir/Documentation" "$pkgdir/usr/share/doc/$pkgbase"
-}
-
 pkgname=(
   "$pkgbase"
   "$pkgbase-headers"
-  "$pkgbase-docs"
 )
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {

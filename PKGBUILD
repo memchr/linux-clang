@@ -51,21 +51,22 @@ b2sums=('bb243ea7493b9d63aa2df2050a3f1ae2b89ee84a20015239cf157e3f4f51c7ac5efedc8
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
-export KBUILD_BUILD_TIMESTAMP="Tue, 19 Jan 2038 03:14:06 +0000"
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
 
+if [[ -f options.sh ]]; then
+  source options.sh
+fi
 _srcpath="$BUILDDIR/$pkgbase/src/$_srcname"
-_kcflags=(
-  "-O2"
-  "-pipe"
-  "-march=native"
-  "-fdebug-prefix-map=$_srcpath=."
-)
 _load="${MAXLOAD}"
 unset MAXLOAD
 
 if command -v ccache > /dev/null; then
   export CCACHE_NOHASHDIR=1
   export CCACHE_BASEDIR="$_srcpath"
+  # use a static timestamp to prevent cache misses
+  export KBUILD_BUILD_TIMESTAMP="Tue, 19 Jan 2038 03:14:06 +0000"
+  # don't use absolute path
+  _kcflags+=("-fdebug-prefix-map=$_srcpath=.")
   export PATH="/usr/lib/ccache/bin:$PATH"
 fi
 
@@ -93,82 +94,10 @@ prepare() {
 
   echo "Setting config..."
   cp ../config .config
-  local _config=(
-    # Enable clang thin LTO
-    -d LTO_NONE
-    -e HAS_LTO_CLANG
-    -e LTO_CLANG_THIN
-    # enable rust
-    #-e RUST
-    -d RUST
-    # compress debuginfo
-    -e DEBUG_INFO_COMPRESSED_ZSTD
-    -d DEBUG_INFO_COMPRESSED_NONE
-    #
-    # unused modules
-    # 
-
-    # graphics
-    -d DRM_GMA500
-    -d DRM_I915
-    -d DRM_MGAG200
-    -d DRM_NOUVEAU
-    -d DRM_VMWGFX
-    -d DRM_XE
-    # wlan
-    -d WLAN_VENDOR_ZYDAS
-    -d WLAN_VENDOR_SILABS
-    -d WLAN_VENDOR_ATH
-    -d WLAN_VENDOR_ST
-    -d WLAN_VENDOR_QUANTENNA
-    -d WLAN_VENDOR_RSI
-    -d WLAN_VENDOR_RALINK
-    -d WLAN_VENDOR_REALTEK
-    -d WLAN_VENDOR_TI
-    -d WLAN_VENDOR_ATH
-    -d WLAN_VENDOR_BROADCOM
-    -d WLAN_VENDOR_MARVELL
-    -d WLAN_VENDOR_MEDIATEK
-    -d WLAN_VENDOR_REALTEK
-    # ethernet
-    -d NET_VENDOR_AQUANTIA
-    -d NET_VENDOR_BROADCOM
-    -d NET_VENDOR_CAVIUM
-    -d NET_VENDOR_CHELSIO
-    -d NET_VENDOR_HUAWEI
-    -d NET_VENDOR_INTEL
-    -d NET_VENDOR_MARVELL
-    -d NET_VENDOR_MELLANOX
-    -d NET_VENDOR_NETRONOME
-    -d NET_VENDOR_PENSANDO
-    -d NET_VENDOR_QLOGIC
-    -d NET_VENDOR_SOLARFLARE
-    -d NET_VENDOR_ATHEROS
-    -d NET_VENDOR_WANGXUN
-    -d NET_VENDOR_CISCO
-    -d NET_VENDOR_DEC
-    -d NET_VENDOR_MICROCHIP
-    -d NET_VENDOR_GOOGLE
-    -d NET_VENDOR_BROCADE
-    -d NET_VENDOR_FUNGIBLE
-    -d NET_VENDOR_EMULEX
-    -d NET_VENDOR_SOLARFLARE
-    -d NET_VENDOR_AMAZON
-    -d NET_VENDOR_SAMSUNG
-    # Distributed Switch Architecture
-    -d NET_DSA_MV88E6XXX
-    -d NET_DSA_SJA1105
-    -d NET_DSA_MICROCHIP_KSZ_COMMON
-    -d NET_DSA_AR9331
-    # file system
-    -d OCFS2_FS   # Oracle cluster file system
-    -d REISERFS_FS # murders wife
-    # others
-    -d SCSI_BNX2_ISCSI # Broadcom NetXtreme, pulls on its ethernet driver
-    -d SCSI_BNX2X_FCOE
-    -d INFINIBAND # computer cluster interconnect. very unlikely to be used on pc
-  )
-  scripts/config "${_config[@]}"
+  if [ -n "${_config[@]}" ]; then
+    echo "Applying custom config..."
+    scripts/config "${_config[@]}"
+  fi
   make olddefconfig
   diff -u ../config .config || :
 

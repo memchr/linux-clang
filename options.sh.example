@@ -1,0 +1,83 @@
+#!/usr/bin/bash
+_kcflags=(
+  "-O2"
+  "-pipe"
+  "-march=native"
+)
+
+_config=(
+  # Enable clang thin LTO
+  -d LTO_NONE
+  -e HAS_LTO_CLANG
+  -e LTO_CLANG_THIN
+  # enable rust
+  #-e RUST
+  -d RUST
+  # compress debuginfo
+  -d DEBUG_INFO_COMPRESSED_NONE
+  -e DEBUG_INFO_COMPRESSED_ZSTD
+  #
+  # unused modules
+  # 
+
+  # graphics
+  -d DRM_GMA500
+  -d DRM_I915
+  -d DRM_MGAG200
+  -d DRM_NOUVEAU
+  -d DRM_VMWGFX
+  -d DRM_XE
+  # wlan
+  -d WLAN_VENDOR_ATH
+  -d WLAN_VENDOR_ATH
+  -d WLAN_VENDOR_BROADCOM
+  -d WLAN_VENDOR_MARVELL
+  -d WLAN_VENDOR_MEDIATEK
+  -d WLAN_VENDOR_QUANTENNA
+  -d WLAN_VENDOR_RALINK
+  -d WLAN_VENDOR_REALTEK
+  -d WLAN_VENDOR_REALTEK
+  -d WLAN_VENDOR_RSI
+  -d WLAN_VENDOR_SILABS
+  -d WLAN_VENDOR_ST
+  -d WLAN_VENDOR_TI
+  -d WLAN_VENDOR_ZYDAS
+  # ethernet
+  -d NET_VENDOR_AMAZON
+  -d NET_VENDOR_AQUANTIA
+  -d NET_VENDOR_ATHEROS
+  -d NET_VENDOR_BROADCOM
+  -d NET_VENDOR_BROCADE
+  -d NET_VENDOR_CAVIUM
+  -d NET_VENDOR_CHELSIO
+  -d NET_VENDOR_CISCO
+  -d NET_VENDOR_DEC
+  -d NET_VENDOR_EMULEX
+  -d NET_VENDOR_FUNGIBLE
+  -d NET_VENDOR_GOOGLE
+  -d NET_VENDOR_HUAWEI
+  -d NET_VENDOR_INTEL
+  -d NET_VENDOR_MARVELL
+  -d NET_VENDOR_MELLANOX
+  -d NET_VENDOR_MICROCHIP
+  -d NET_VENDOR_NETRONOME
+  -d NET_VENDOR_PENSANDO
+  -d NET_VENDOR_QLOGIC
+  -d NET_VENDOR_SAMSUNG
+  -d NET_VENDOR_SOLARFLARE
+  -d NET_VENDOR_SOLARFLARE
+  -d NET_VENDOR_WANGXUN
+  # Distributed Switch Architecture
+  -d NET_DSA_AR9331
+  -d NET_DSA_MICROCHIP_KSZ_COMMON
+  -d NET_DSA_MV88E6XXX
+  -d NET_DSA_SJA1105
+  # file system
+  -d OCFS2_FS   # Oracle cluster file system
+  -d REISERFS_FS # murders wife
+  # others
+  -d INFINIBAND # computer cluster interconnect. very unlikely to be used on pc
+  -d SCSI_BNX2X_FCOE
+  -d SCSI_BNX2_ISCSI # Broadcom NetXtreme, pulls on its ethernet driver
+)
+# vim:set ts=8 sts=2 sw=2 et:

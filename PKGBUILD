@@ -53,24 +53,25 @@ export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="Tue, 19 Jan 2038 03:14:06 +0000"
 
-_src_abs="$BUILDDIR/$pkgbase/src/$_srcname"
+_srcpath="$BUILDDIR/$pkgbase/src/$_srcname"
 _kcflags=(
   "-O2"
   "-pipe"
   "-march=native"
-  "-fdebug-prefix-map=$_src_abs=."
+  "-fdebug-prefix-map=$_srcpath=."
 )
 _load="${MAXLOAD}"
 unset MAXLOAD
 
 if command -v ccache > /dev/null; then
   export CCACHE_NOHASHDIR=1
-  export CCACHE_BASEDIR="$_src_abs"
+  export CCACHE_BASEDIR="$_srcpath"
   export PATH="/usr/lib/ccache/bin:$PATH"
 fi
 
 make() {
-  command make -j "$(nproc --all)" -l"$_load" LLVM=1 LLVM_IAS=1 KCFLAGS="${_kcflags[*]}" "$@"
+  command make -j "$(nproc --all)" -l"$_load" \
+    LLVM=1 LLVM_IAS=1 KCFLAGS="${_kcflags[*]}" "$@"
 }
 
 prepare() {

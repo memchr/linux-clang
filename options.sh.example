@@ -21,12 +21,13 @@ _config=(
   # 
 
   # graphics
-  -d DRM_GMA500
+  -d DRM_GMA500     # legacy Intel IGPU
   -d DRM_I915
-  -d DRM_MGAG200
-  -d DRM_NOUVEAU
-  -d DRM_VMWGFX
-  -d DRM_XE
+  -d DRM_MGAG200    # legacy Intel iGPU
+  -d DRM_NOUVEAU    # nvidia
+  -d DRM_RADEON     # legacy AMD gpu driver
+  -d DRM_VMWGFX     # VMWare
+  -d DRM_XE         # Intel Xe Graphics
   # wlan
   -d WLAN_VENDOR_ATH
   -d WLAN_VENDOR_ATH

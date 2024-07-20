@@ -94,7 +94,7 @@ prepare() {
 
   echo "Setting config..."
   cp ../config .config
-  if [ -n "${_config[@]}" ]; then
+  if [[ -n "${_config[@]}" ]]; then
     echo "Applying custom config..."
     scripts/config "${_config[@]}"
   fi

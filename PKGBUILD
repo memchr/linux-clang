@@ -99,26 +99,74 @@ prepare() {
     -e HAS_LTO_CLANG
     -e LTO_CLANG_THIN
     # enable rust
-    -e RUST
-    # do not build debug info
-    -e DEBUG_INFO_NONE
-    -d DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
-    -d DEBUG_INFO_DWARF4
-    -d DEBUG_INFO_DWARF5 
+    #-e RUST
+    -d RUST
+    # compress debuginfo
+    -e DEBUG_INFO_COMPRESSED_ZSTD
+    -d DEBUG_INFO_COMPRESSED_NONE
+    #
     # unused modules
+    # 
+
+    # graphics
+    -d DRM_GMA500
     -d DRM_I915
-    -d I915_GVT_KVMGT
+    -d DRM_MGAG200
+    -d DRM_NOUVEAU
+    -d DRM_VMWGFX
+    -d DRM_XE
+    # wlan
+    -d WLAN_VENDOR_ZYDAS
+    -d WLAN_VENDOR_SILABS
+    -d WLAN_VENDOR_ATH
+    -d WLAN_VENDOR_ST
+    -d WLAN_VENDOR_QUANTENNA
+    -d WLAN_VENDOR_RSI
+    -d WLAN_VENDOR_RALINK
     -d WLAN_VENDOR_REALTEK
+    -d WLAN_VENDOR_TI
     -d WLAN_VENDOR_ATH
     -d WLAN_VENDOR_BROADCOM
-    -d WLAN_VENDOR_MEDIATEK
     -d WLAN_VENDOR_MARVELL
-    -d NET_VENDOR_INTEL
-    -d NET_VENDOR_MELLANOX
+    -d WLAN_VENDOR_MEDIATEK
+    -d WLAN_VENDOR_REALTEK
+    # ethernet
+    -d NET_VENDOR_AQUANTIA
     -d NET_VENDOR_BROADCOM
-    -d NET_VENDOR_SOLARFLARE
-    -d NET_VENDOR_QLOGIC
+    -d NET_VENDOR_CAVIUM
+    -d NET_VENDOR_CHELSIO
+    -d NET_VENDOR_HUAWEI
+    -d NET_VENDOR_INTEL
     -d NET_VENDOR_MARVELL
+    -d NET_VENDOR_MELLANOX
+    -d NET_VENDOR_NETRONOME
+    -d NET_VENDOR_PENSANDO
+    -d NET_VENDOR_QLOGIC
+    -d NET_VENDOR_SOLARFLARE
+    -d NET_VENDOR_ATHEROS
+    -d NET_VENDOR_WANGXUN
+    -d NET_VENDOR_CISCO
+    -d NET_VENDOR_DEC
+    -d NET_VENDOR_MICROCHIP
+    -d NET_VENDOR_GOOGLE
+    -d NET_VENDOR_BROCADE
+    -d NET_VENDOR_FUNGIBLE
+    -d NET_VENDOR_EMULEX
+    -d NET_VENDOR_SOLARFLARE
+    -d NET_VENDOR_AMAZON
+    -d NET_VENDOR_SAMSUNG
+    # Distributed Switch Architecture
+    -d NET_DSA_MV88E6XXX
+    -d NET_DSA_SJA1105
+    -d NET_DSA_MICROCHIP_KSZ_COMMON
+    -d NET_DSA_AR9331
+    # file system
+    -d OCFS2_FS   # Oracle cluster file system
+    -d REISERFS_FS # murders wife
+    # others
+    -d SCSI_BNX2_ISCSI # Broadcom NetXtreme, pulls on its ethernet driver
+    -d SCSI_BNX2X_FCOE
+    -d INFINIBAND # computer cluster interconnect. very unlikely to be used on pc
   )
   scripts/config "${_config[@]}"
   make olddefconfig
@@ -238,18 +286,18 @@ _package-headers() {
   while read -rd '' file; do
     case "$(file -Sib "$file")" in
       application/x-sharedlib\;*)      # Libraries (.so)
-        strip -v $STRIP_SHARED "$file" ;;
+        llvm-strip $STRIP_SHARED "$file" ;;
       application/x-archive\;*)        # Libraries (.a)
-        strip -v $STRIP_STATIC "$file" ;;
+        llvm-strip $STRIP_STATIC "$file" ;;
       application/x-executable\;*)     # Binaries
-        strip -v $STRIP_BINARIES "$file" ;;
+        llvm-strip $STRIP_BINARIES "$file" ;;
       application/x-pie-executable\;*) # Relocatable binaries
-        strip -v $STRIP_SHARED "$file" ;;
+        llvm-strip $STRIP_SHARED "$file" ;;
     esac
   done < <(find "$builddir" -type f -perm -u+x ! -name vmlinux -print0)
 
   echo "Stripping vmlinux..."
-  strip -v $STRIP_STATIC "$builddir/vmlinux"
+  llvm-strip $STRIP_STATIC "$builddir/vmlinux"
 
   echo "Adding symlink..."
   mkdir -p "$pkgdir/usr/src"
